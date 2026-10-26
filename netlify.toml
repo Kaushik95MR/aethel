@@ -1,0 +1,10 @@
+# Netlify builds the customer site (apps/web) from this monorepo.
+# Set these in Netlify under Site configuration > Environment variables (never commit them):
+#   NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY
+
+[build]
+  base = "apps/web"
+  command = "pnpm build"
+
+[build.environment]
+  NODE_VERSION = "22"

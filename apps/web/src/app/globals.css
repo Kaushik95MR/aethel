@@ -1,0 +1,218 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+/*
+ * Aethel palette. The shadcn semantic tokens (background, primary, muted ...) are mapped onto it,
+ * so components from the shadcn registry pick up the brand without per-component overrides.
+ *   ground  mist       ink  ridge ink       field  shola green       action  trail blaze
+ */
+:root {
+  --background: #e6ece9;
+  --foreground: #10201d;
+  --card: #f2f6f4;
+  --card-foreground: #10201d;
+  --popover: #f2f6f4;
+  --popover-foreground: #10201d;
+  --primary: #ff5a1f;
+  --primary-foreground: #10201d;
+  --secondary: #d3ddd8;
+  --secondary-foreground: #10201d;
+  --muted: #d3ddd8;
+  --muted-foreground: #4d5d59;
+  --accent: #d3ddd8;
+  --accent-foreground: #10201d;
+  --destructive: #b42318;
+  --border: #c3cec9;
+  --input: #c3cec9;
+  --ring: #ff5a1f;
+  --radius: 0.5rem;
+
+  /* Brand-only tokens */
+  --ink: #10201d;
+  --shola: #264a3c;
+  --blaze: #ff5a1f;
+  --link: #b8400a; /* blaze darkened so it passes 4.5:1 as text on mist */
+}
+
+@theme inline {
+  --font-sans: var(--font-geist-sans);
+  --font-display: var(--font-bricolage);
+  --font-heading: var(--font-bricolage);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-ink: var(--ink);
+  --color-shola: var(--shola);
+  --color-blaze: var(--blaze);
+  --color-link: var(--link);
+  /* Older names used across the site */
+  --color-brand: var(--blaze);
+  --color-brand-ink: var(--ink);
+  --color-line: var(--border);
+  --color-surface: var(--card);
+
+  --radius-sm: calc(var(--radius) * 0.5);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    color-scheme: light;
+    @apply font-sans;
+  }
+  body {
+    background: var(--background);
+    color: var(--foreground);
+  }
+}
+
+/* Display type is tight and narrow so large headlines can run edge to edge. */
+.font-display {
+  font-stretch: 82%;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  line-height: 0.95;
+}
+
+:focus-visible {
+  outline: 2px solid var(--blaze);
+  outline-offset: 3px;
+}
+
+/* The one entrance on the landing page: text fades up once. */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+}
+.rise {
+  animation: rise 0.6s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
+/* Trek story: the party-bus scene is drawn with CSS so it needs no photograph. */
+@keyframes story-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes story-eq {
+  0%,
+  100% {
+    transform: scaleY(0.12);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+@keyframes story-bounce {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+@keyframes story-road {
+  to {
+    background-position-x: -120px;
+  }
+}
+.story-beam {
+  position: absolute;
+  left: 50%;
+  top: 34%;
+  width: 150vmax;
+  height: 150vmax;
+  margin: -75vmax 0 0 -75vmax;
+  background: conic-gradient(from 0deg, transparent 0 7%, rgba(255, 90, 31, 0.3) 9%, transparent 13% 50%, rgba(120, 190, 255, 0.24) 52%, transparent 56%);
+  mix-blend-mode: screen;
+  animation: story-spin 9s linear infinite;
+}
+.story-beam-b {
+  animation-duration: 14s;
+  animation-direction: reverse;
+  opacity: 0.8;
+}
+.story-bus {
+  animation: story-bounce 0.7s ease-in-out infinite;
+}
+.story-eq span {
+  transform-origin: bottom;
+  animation: story-eq calc(0.5s + var(--i) * 0.037s) ease-in-out infinite;
+  animation-delay: calc(var(--i) * -0.11s);
+}
+.story-wheel {
+  animation: story-spin 0.6s linear infinite;
+}
+.story-road {
+  background-image: repeating-linear-gradient(90deg, #ff5a1f 0 50px, transparent 50px 120px);
+  background-size: 120px 3px;
+  background-repeat: repeat-x;
+  background-position: 0 50%;
+  animation: story-road 0.7s linear infinite;
+}
+
+/* Timeline marker: a small pop when the carrier changes, and a walking cycle for the trekker. */
+@keyframes story-pop {
+  from {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+}
+.story-pop {
+  animation: story-pop 0.25s ease-out both;
+}
+@keyframes story-leg {
+  0%,
+  100% {
+    transform: rotate(-22deg);
+  }
+  50% {
+    transform: rotate(22deg);
+  }
+}
+.story-leg-a {
+  animation: story-leg 0.7s ease-in-out infinite;
+}
+.story-leg-b {
+  animation: story-leg 0.7s ease-in-out infinite reverse;
+}
