@@ -5,6 +5,8 @@
 [build]
   base = "apps/web"
   command = "pnpm build"
+  # Relative to the base directory. Without this, Netlify guessed apps/admin/.next from the monorepo.
+  publish = ".next"
 
 [build.environment]
   NODE_VERSION = "22"
