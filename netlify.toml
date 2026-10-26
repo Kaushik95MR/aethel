@@ -10,3 +10,7 @@
 
 [build.environment]
   NODE_VERSION = "22"
+
+# These two values are public by design: they are compiled into the browser code. Tell Netlify's secret scanner so
+# it doesn't fail the build when it finds them in the output. The service role key stays scanned and must never appear.
+  SECRETS_SCAN_OMIT_KEYS = "NEXT_PUBLIC_SUPABASE_URL,NEXT_PUBLIC_SUPABASE_ANON_KEY"
