@@ -1,0 +1,112 @@
+[
+  {
+    "file": "city",
+    "use": "Friday night, city traffic",
+    "title": "busy city 05",
+    "author": "rucisko",
+    "license": "CC0 1.0",
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://freesound.org/people/rucisko/sounds/462494",
+    "provider": "freesound",
+    "seconds": 61
+  },
+  {
+    "file": "night",
+    "use": "Night in camp",
+    "title": "Ambience, Night Wildlife, A.wav",
+    "author": "InspectorJ",
+    "license": "BY 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+    "source": "https://freesound.org/people/InspectorJ/sounds/352514",
+    "provider": "freesound",
+    "seconds": 61
+  },
+  {
+    "file": "camp",
+    "use": "Campfire",
+    "title": "Crackling Fire",
+    "author": "Sauron974",
+    "license": "CC0 1.0",
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://freesound.org/people/Sauron974/sounds/204348",
+    "provider": "freesound",
+    "seconds": 96
+  },
+  {
+    "file": "jeep",
+    "use": "Jeep ride",
+    "title": "Jeep Engine #1.wav",
+    "author": "deleted_user_4401185",
+    "license": "BY 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+    "source": "https://freesound.org/people/deleted_user_4401185/sounds/253440",
+    "provider": "freesound",
+    "seconds": 181
+  },
+  {
+    "file": "forest",
+    "use": "Forest birds",
+    "title": "Birds In Spring (Scotland)",
+    "author": "BurghRecords",
+    "license": "CC0 1.0",
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://freesound.org/people/BurghRecords/sounds/463903",
+    "provider": "freesound",
+    "seconds": 149
+  },
+  {
+    "file": "summit",
+    "use": "Summit wind",
+    "title": "EXT Blustery quiet 2.wav",
+    "author": "deleted_user_2104797",
+    "license": "CC0 1.0",
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://freesound.org/people/deleted_user_2104797/sounds/324492",
+    "provider": "freesound",
+    "seconds": 159
+  },
+  {
+    "file": "morning",
+    "use": "Misty morning",
+    "title": "forest March 7am 180408_1258.wav",
+    "author": "klankbeeld",
+    "license": "BY 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+    "source": "https://freesound.org/people/klankbeeld/sounds/424611",
+    "provider": "freesound",
+    "seconds": 182
+  },
+  {
+    "file": "road",
+    "use": "Road under the bus and the ride home",
+    "title": "City_Street_Traffic_01",
+    "author": "dheming",
+    "license": "BY 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+    "source": "https://freesound.org/people/dheming/sounds/173410",
+    "provider": "freesound",
+    "seconds": 45
+  },
+  {
+    "file": "music-bus",
+    "use": "Party bus music",
+    "title": "India Funk",
+    "author": "RudySeb",
+    "license": "BY-SA 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0/be/",
+    "source": "https://www.jamendo.com/track/178481",
+    "provider": "jamendo",
+    "seconds": 201
+  },
+  {
+    "file": "music-calm",
+    "use": "Calm music",
+    "title": "Flute",
+    "author": "Terepin",
+    "license": "BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
+    "source": "https://www.jamendo.com/track/392892",
+    "provider": "jamendo",
+    "seconds": 209
+  }
+]

@@ -5,6 +5,8 @@ import { requireStaff } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { formatDate, humanize } from "@/lib/format";
 import { StatusBadge } from "@/components/status-badge";
+import { createBookingFromEnquiry } from "../../bookings/actions";
+import { CATEGORIES } from "../../catalogue/categories";
 import { updateEnquiryStatus } from "../actions";
 
 const STATUSES = ["new", "contacted", "quoted", "won", "lost"] as const;
@@ -13,6 +15,8 @@ const MESSAGES: Record<string, { tone: "ok" | "error"; text: string }> = {
   saved: { tone: "ok", text: "Enquiry updated." },
   reason_required: { tone: "error", text: "Add a reason before marking an enquiry as lost." },
   failed: { tone: "error", text: "Couldn't update this enquiry. You may not have access to it." },
+  booking_invalid: { tone: "error", text: "Pick a departure, add at least one traveller and enter the total in rupees." },
+  booking_failed: { tone: "error", text: "Couldn't create the booking. You may not have access." },
 };
 
 type Enquiry = {
@@ -21,6 +25,7 @@ type Enquiry = {
   email: string | null;
   phone: string | null;
   destination_interest: string | null;
+  trip_type: string | null;
   preferred_start: string | null;
   flexible_dates: boolean;
   adults: number;
@@ -57,9 +62,22 @@ export default async function EnquiryDetailPage({
   if (!data) notFound();
   const e = data as unknown as Enquiry;
 
+  const { data: existingBooking } = await supabase.from("bookings").select("id, reference").eq("enquiry_id", id).maybeSingle();
+  const { data: depRows } = e.package
+    ? await supabase
+        .from("departures")
+        .select("id, start_date, end_date, status, package:packages!inner(slug, base_price_paise)")
+        .eq("package.slug", e.package.slug)
+        .in("status", ["open", "closed"])
+        .gte("start_date", new Date().toISOString().slice(0, 10))
+        .order("start_date")
+    : { data: [] };
+  const departures = (depRows ?? []) as unknown as { id: string; start_date: string; end_date: string }[];
+
   const details: [string, React.ReactNode][] = [
     ["Email", e.email ?? "—"],
     ["Phone", e.phone ?? "—"],
+    ["Trip type", CATEGORIES.find((c) => c.slug === e.trip_type)?.name ?? "Not chosen"],
     ["Package", e.package?.title ?? "—"],
     ["Destination interest", e.destination_interest ?? "—"],
     ["Preferred start", `${formatDate(e.preferred_start)}${e.flexible_dates ? " (flexible)" : ""}`],
@@ -135,6 +153,54 @@ export default async function EnquiryDetailPage({
           Save
         </button>
       </form>
+
+      <section className="space-y-3 rounded-lg border border-zinc-200 bg-white p-4 text-sm">
+        <h2 className="font-medium">Booking</h2>
+        {existingBooking ? (
+          <p>
+            Booked as{" "}
+            <Link href={`/bookings/${existingBooking.id}`} className="underline">
+              {existingBooking.reference}
+            </Link>
+            .
+          </p>
+        ) : departures.length === 0 ? (
+          <p className="text-zinc-500">
+            {e.package
+              ? "This package has no upcoming departures. Add one in the catalogue first."
+              : "This enquiry isn't linked to a package, so there are no departures to book. Add the booking once the customer picks a trip."}
+          </p>
+        ) : (
+          <form action={createBookingFromEnquiry} className="flex flex-wrap items-end gap-2">
+            <input type="hidden" name="enquiry_id" value={e.id} />
+            <label className="space-y-1">
+              <span className="block text-xs text-zinc-500">Departure</span>
+              <select name="departure_id" required className="rounded-md border border-zinc-300 px-2 py-1.5">
+                {departures.map((d) => (
+                  <option key={d.id} value={d.id}>
+                    {formatDate(d.start_date)} to {formatDate(d.end_date)}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="space-y-1">
+              <span className="block text-xs text-zinc-500">Adults</span>
+              <input type="number" name="adults" min={0} max={100} defaultValue={e.adults} className="w-20 rounded-md border border-zinc-300 px-2 py-1.5" />
+            </label>
+            <label className="space-y-1">
+              <span className="block text-xs text-zinc-500">Children</span>
+              <input type="number" name="children" min={0} max={100} defaultValue={e.children} className="w-20 rounded-md border border-zinc-300 px-2 py-1.5" />
+            </label>
+            <label className="space-y-1">
+              <span className="block text-xs text-zinc-500">Total (₹)</span>
+              <input name="total" required inputMode="decimal" className="w-32 rounded-md border border-zinc-300 px-2 py-1.5" />
+            </label>
+            <button type="submit" className="rounded-md bg-zinc-900 px-3 py-1.5 text-white hover:bg-zinc-800">
+              Create booking
+            </button>
+          </form>
+        )}
+      </section>
     </div>
   );
 }

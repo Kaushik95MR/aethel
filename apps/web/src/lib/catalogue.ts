@@ -23,9 +23,12 @@ export type PackageCard = {
   base_price_paise: number | null;
   price_note: string | null;
   tags: string[];
+  highlights: string[];
   is_domestic: boolean;
   /** Slug of the destination whose photo represents this package. */
   cover: string | null;
+  /** Names of the destinations the package visits. Used by search. */
+  places?: string[];
 };
 
 export type PackageDay = {
@@ -51,7 +54,7 @@ export type PackageDetail = PackageCard & {
   destinations: Pick<Destination, "slug" | "name">[];
 };
 
-const CARD_COLUMNS = "id, slug, title, summary, duration_days, base_price_paise, price_note, tags, is_domestic";
+const CARD_COLUMNS = "id, slug, title, summary, duration_days, base_price_paise, price_note, tags, highlights, is_domestic";
 
 export async function getDestinations(): Promise<Destination[]> {
   "use cache";
@@ -144,18 +147,145 @@ export async function getPackages(): Promise<PackageCard[]> {
   cacheTag("catalogue");
   const { data, error } = await createPublicClient()
     .from("packages")
-    .select(`${CARD_COLUMNS}, package_destinations(destination:destinations(slug, status))`)
+    .select(`${CARD_COLUMNS}, package_destinations(destination:destinations(slug, name, status))`)
     .eq("status", "published")
     .order("title");
   if (error) throw new Error(`Couldn't load packages: ${error.message}`);
 
-  type Row = Omit<PackageCard, "cover"> & {
-    package_destinations: { destination: { slug: string; status: string } | null }[];
+  type Row = Omit<PackageCard, "cover" | "places"> & {
+    package_destinations: { destination: { slug: string; name: string; status: string } | null }[];
   };
   return ((data ?? []) as unknown as Row[]).map(({ package_destinations, ...p }) => ({
     ...p,
     cover: package_destinations.map((l) => l.destination).find((d) => d?.status === "published")?.slug ?? null,
+    places: package_destinations.map((l) => l.destination?.name).filter((n): n is string => !!n),
   }));
+}
+
+export type MediaCredit = { title: string; author: string; license: string; licenseUrl: string | null; source: string };
+
+export type ItineraryStep = {
+  id: string;
+  kind: string;
+  title: string;
+  description: string | null;
+  start_time: string | null;
+  vehicle: string | null;
+  location: { label: string; maps_url: string | null } | null;
+  to_location: { label: string; maps_url: string | null } | null;
+  sound: string | null;
+  /** Pick-up points, in order. */
+  stops: { label: string; maps_url: string | null; time: string | null }[];
+  media: { kind: "image" | "video"; src: string; alt: string; credit: MediaCredit | null }[];
+};
+export type ItineraryDay = { day_no: number; title: string; summary: string | null; steps: ItineraryStep[] };
+export type TripItinerary = { name: string; start_date: string; days: ItineraryDay[] };
+
+/** The itinerary of the next open departure that has one. Null when staff haven't built one yet. */
+export async function getItinerary(slug: string): Promise<TripItinerary | null> {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("catalogue");
+  const supabase = createPublicClient();
+  const today = new Date().toISOString().slice(0, 10);
+  const { data: linked } = await supabase
+    .from("departures")
+    .select("start_date, itinerary_id, package:packages!inner(slug, status)")
+    .eq("package.slug", slug)
+    .eq("package.status", "published")
+    .eq("status", "open")
+    .gte("start_date", today)
+    .not("itinerary_id", "is", null)
+    .order("start_date")
+    .limit(1)
+    .maybeSingle();
+  let dep: { start_date: string; itinerary_id: string | null } | null = linked;
+
+  // No departure is linked to an itinerary yet: show the package's first itinerary, dated from its next departure.
+  if (!dep?.itinerary_id) {
+    const { data: first } = await supabase
+      .from("itineraries")
+      .select("id, package:packages!inner(slug, status)")
+      .eq("package.slug", slug)
+      .eq("package.status", "published")
+      .order("sort_order")
+      .limit(1)
+      .maybeSingle();
+    if (!first) return null;
+    const { data: next } = await supabase
+      .from("departures")
+      .select("start_date, package:packages!inner(slug)")
+      .eq("package.slug", slug)
+      .eq("status", "open")
+      .gte("start_date", today)
+      .order("start_date")
+      .limit(1)
+      .maybeSingle();
+    dep = { start_date: next?.start_date ?? today, itinerary_id: first.id };
+  }
+  if (!dep.itinerary_id) return null;
+
+  const { data: itn, error } = await supabase
+    .from("itineraries")
+    .select(
+      `name, itinerary_days(day_no, title, summary, itinerary_steps(
+        id, sort_order, kind, title, description, start_time, sound,
+        vehicle:catalogue_options!vehicle_id(label),
+        location:catalogue_options!location_id(label, maps_url),
+        to_location:catalogue_options!to_location_id(label, maps_url),
+        itinerary_step_media(sort_order, media:media(bucket, path, kind, alt, credit)),
+        itinerary_step_stops(sort_order, stop_time, location:catalogue_options!location_id(label, maps_url))
+      ))`,
+    )
+    .eq("id", dep.itinerary_id)
+    .maybeSingle();
+  if (error) throw new Error(`Couldn't load itinerary: ${error.message}`);
+  if (!itn) return null;
+
+  type Raw = {
+    name: string;
+    itinerary_days: {
+      day_no: number;
+      title: string;
+      summary: string | null;
+      itinerary_steps: (Omit<ItineraryStep, "vehicle" | "media" | "stops"> & {
+        sort_order: number;
+        vehicle: { label: string } | null;
+        itinerary_step_stops: { sort_order: number; stop_time: string | null; location: { label: string; maps_url: string | null } | null }[];
+        itinerary_step_media: { sort_order: number; media: { bucket: string; path: string; kind: string; alt: string | null; credit: MediaCredit | null } | null }[];
+      })[];
+    }[];
+  };
+  const raw = itn as unknown as Raw;
+  const base = process.env.NEXT_PUBLIC_SUPABASE_URL;
+
+  const days: ItineraryDay[] = raw.itinerary_days
+    .sort((a, b) => a.day_no - b.day_no)
+    .map((d) => ({
+      day_no: d.day_no,
+      title: d.title,
+      summary: d.summary,
+      steps: d.itinerary_steps
+        .sort((a, b) => a.sort_order - b.sort_order)
+        .map(({ sort_order: _o, itinerary_step_media, itinerary_step_stops, vehicle, ...s }) => {
+          void _o;
+          return {
+            ...s,
+            vehicle: vehicle?.label ?? null,
+            stops: itinerary_step_stops
+              .sort((a, b) => a.sort_order - b.sort_order)
+              .flatMap((p) => (p.location ? [{ label: p.location.label, maps_url: p.location.maps_url, time: p.stop_time }] : [])),
+            media: itinerary_step_media
+              .sort((a, b) => a.sort_order - b.sort_order)
+              .flatMap((m) =>
+                m.media && (m.media.kind === "image" || m.media.kind === "video")
+                  ? [{ kind: m.media.kind, src: `${base}/storage/v1/object/public/${m.media.bucket}/${m.media.path}`, alt: m.media.alt ?? "", credit: m.media.credit }]
+                  : [],
+              ),
+          };
+        }),
+    }));
+  return { name: raw.name, start_date: dep.start_date, days };
 }
 
 export async function getPackage(slug: string): Promise<PackageDetail | null> {

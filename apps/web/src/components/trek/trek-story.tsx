@@ -1,10 +1,13 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import type { PackageDetail } from "@/lib/catalogue";
+import type { PackageDetail, TripItinerary } from "@/lib/catalogue";
 import { formatDate, formatPaise } from "@/lib/format";
-import { photoFor } from "@/lib/photos";
+import { photoFor, type Photo } from "@/lib/photos";
 import type { SceneId } from "@/lib/story-sound";
+import audioCredits from "@/data/audio-credits.json";
+import { isTrek } from "@/lib/treks";
+import { chaptersFromItinerary } from "./chapters";
 import { SoundHint } from "./sound-hint";
 import { StoryScroll, type Chapter, type Scene } from "./story-scroll";
 
@@ -132,16 +135,43 @@ function List({ title, items }: { title: string; items: string[] }) {
   );
 }
 
-export function TrekStory({ pkg }: { pkg: PackageDetail }) {
-  const hero = photoFor("kp-dawn");
-  const chapters: Chapter[] = CHAPTERS.flatMap((c) => {
-    if (c.scene === "bus") return [{ ...c, scene: { kind: "bus" } as Scene }];
+// Used until staff attach an itinerary to a departure in the admin app.
+const FALLBACK_DAYS: [number, string][] = [
+  [1, "Friday"], [1, "Friday"], [2, "Saturday"], [2, "Saturday"], [2, "Saturday"],
+  [2, "Saturday"], [2, "Saturday"], [3, "Sunday"], [3, "Sunday"],
+];
+
+function fallbackChapters(): { chapters: Chapter[]; credits: Photo[] } {
+  const chapters: Chapter[] = CHAPTERS.flatMap((c, i) => {
+    const day = { id: c.scene, dayNo: FALLBACK_DAYS[i][0], dayLabel: FALLBACK_DAYS[i][1] };
+    if (c.scene === "bus") return [{ ...c, ...day, destination: "Kukke Subramanya", scene: { kind: "bus" } as Scene }];
     const ph = photoFor(c.scene);
-    return ph ? [{ ...c, scene: { kind: "photo", src: ph.src, alt: ph.alt } as Scene }] : [];
+    return ph ? [{ ...c, ...day, scene: { kind: "photo", src: ph.src, alt: ph.alt } as Scene }] : [];
   });
-  const credits = [...new Set(["kp-dawn", ...CHAPTERS.map((c) => c.scene).filter((k) => k !== "bus")])]
-    .map((k) => photoFor(k))
+  const credits = CHAPTERS.filter((c) => c.scene !== "bus")
+    .map((c) => photoFor(c.scene))
     .filter((p) => p !== null);
+  return { chapters, credits };
+}
+
+export function TrekStory({ pkg, itinerary }: { pkg: PackageDetail; itinerary: TripItinerary | null }) {
+  // Kumara Parvatha keeps its hand-written facts and FAQ. Any other package with an itinerary gets the same story page from its own data.
+  const isKumara = isTrek(pkg.slug);
+  const story = itinerary && itinerary.days.some((d) => d.steps.length) ? chaptersFromItinerary(itinerary) : fallbackChapters();
+  const { chapters } = story;
+  const own = itinerary?.days.flatMap((d) => d.steps.flatMap((s) => s.media)).find((m) => m.kind === "image");
+  const heroPhoto = photoFor(isKumara ? "kp-dawn" : "kp-mist");
+  const hero = !isKumara && own ? { src: own.src, alt: own.alt } : heroPhoto ? { src: heroPhoto.src, alt: heroPhoto.alt } : null;
+  const credits = [...new Map([...(!own || isKumara ? (heroPhoto ? [heroPhoto] : []) : []), ...story.credits].map((p) => [p.src, p])).values()];
+  const facts = isKumara
+    ? FACTS
+    : [
+        { value: `${pkg.duration_days} days`, label: "Trip length" },
+        { value: formatPaise(pkg.base_price_paise), label: "Per person" },
+        { value: pkg.departures[0] ? formatDate(pkg.departures[0].start_date) : "Soon", label: "Next departure" },
+        ...(pkg.highlights[0] ? [{ value: pkg.highlights[0], label: "Highlight" }] : []),
+      ];
+  const pickLabel = isKumara ? "Pick a Friday" : "Pick a date";
   const enquire = `/enquire?package=${pkg.slug}`;
 
   return (
@@ -150,12 +180,14 @@ export function TrekStory({ pkg }: { pkg: PackageDetail }) {
         {hero && <Image src={hero.src} alt={hero.alt} fill priority sizes="100vw" className="-z-20 object-cover" />}
         <div aria-hidden className="absolute inset-0 -z-10 bg-gradient-to-t from-ink/90 via-ink/35 to-ink/30" />
         <div className="rise mx-auto w-full max-w-[88rem] px-5 pb-12 pt-32 sm:px-8 sm:pb-16">
-          <h1 className="font-display text-[clamp(3.6rem,13vw,12rem)]">Kumara Parvatha</h1>
+          <h1 className="font-display text-[clamp(3.6rem,13vw,12rem)]">{isKumara ? "Kumara Parvatha" : pkg.title}</h1>
           <p className="mt-6 max-w-xl text-xl text-background">
-            A weekend out of Bengaluru: an overnight bus, a summit, a jeep ride down and a campfire at base camp.
+            {isKumara
+              ? "A weekend out of Bengaluru: an overnight bus, a summit, a jeep ride down and a campfire at base camp."
+              : (pkg.summary ?? pkg.description)}
           </p>
           <dl className="mt-10 grid grid-cols-2 gap-x-8 gap-y-6 sm:grid-cols-4">
-            {FACTS.map((f) => (
+            {facts.map((f) => (
               <div key={f.label}>
                 <dt className="text-background/80">{f.label}</dt>
                 <dd className="mt-1 font-display text-[clamp(1.6rem,3vw,2.4rem)]">{f.value}</dd>
@@ -167,7 +199,7 @@ export function TrekStory({ pkg }: { pkg: PackageDetail }) {
               href="#dates"
               className="rounded-full bg-primary px-8 py-4 text-lg font-medium text-primary-foreground transition-opacity hover:opacity-90"
             >
-              Pick a Friday
+              {pickLabel}
             </a>
             <Link href={enquire} className="text-lg text-background underline underline-offset-4">
               Ask us a question
@@ -190,6 +222,7 @@ export function TrekStory({ pkg }: { pkg: PackageDetail }) {
         </div>
       </section>
 
+      {isKumara && (
       <section data-header="dark" className="bg-ink text-background">
         <div className="mx-auto grid max-w-[88rem] gap-12 px-5 py-28 sm:px-8 sm:py-40 lg:grid-cols-12">
           <div className="lg:col-span-5">
@@ -213,10 +246,11 @@ export function TrekStory({ pkg }: { pkg: PackageDetail }) {
           </Accordion>
         </div>
       </section>
+      )}
 
       <section id="dates" className="mx-auto max-w-[88rem] scroll-mt-20 px-5 py-28 sm:px-8 sm:py-40">
         <div className="flex flex-wrap items-end justify-between gap-6">
-          <h2 className="max-w-[12ch] font-display text-[clamp(3rem,9vw,8rem)] text-ink">Pick a Friday.</h2>
+          <h2 className="max-w-[12ch] font-display text-[clamp(3rem,9vw,8rem)] text-ink">{pickLabel}.</h2>
           <p className="text-xl text-ink">{formatPaise(pkg.base_price_paise)} per person, from Bengaluru</p>
         </div>
         <ul className="mt-12 flex flex-col divide-y divide-ink/20 border-y border-ink/20">
@@ -262,6 +296,17 @@ export function TrekStory({ pkg }: { pkg: PackageDetail }) {
                 {c.title}
               </a>{" "}
               by {c.author}, {c.license}, via Wikimedia Commons
+            </li>
+          ))}
+        </ul>
+        <p className="mt-6 text-xs text-muted-foreground">Sound, via Openverse:</p>
+        <ul className="mt-1 flex max-w-3xl flex-col gap-1 text-xs text-muted-foreground">
+          {audioCredits.map((a) => (
+            <li key={a.file}>
+              <a href={a.source} className="underline" rel="noopener noreferrer">
+                {a.title}
+              </a>{" "}
+              by {a.author}, {a.license} ({a.use})
             </li>
           ))}
         </ul>

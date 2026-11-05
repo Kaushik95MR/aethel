@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Brand } from "@/components/brand";
+import { btnPrimary, field } from "@/components/ui";
 import { createClient } from "@/lib/supabase/browser";
 
 type Mode =
@@ -74,8 +76,9 @@ export function MfaForm() {
 
   return (
     <form onSubmit={onSubmit} className="w-full max-w-sm space-y-4 rounded-xl border border-zinc-200 bg-white p-6">
+      <Brand />
       <div>
-        <h1 className="text-lg font-medium">
+        <h1 className="font-display text-xl font-semibold">
           {mode.kind === "enroll" ? "Set up two-step sign in" : "Enter your code"}
         </h1>
         <p className="text-sm text-zinc-500">
@@ -100,7 +103,7 @@ export function MfaForm() {
 
       {(mode.kind === "verify" || mode.kind === "enroll") && (
         <>
-          <label className="block text-sm">
+          <label className="block space-y-1.5 text-sm font-medium">
             6-digit code
             <input
               value={code}
@@ -110,15 +113,11 @@ export function MfaForm() {
               }}
               inputMode="numeric"
               autoComplete="one-time-code"
-              className="mt-1 w-full rounded-md border border-zinc-300 px-3 py-2 tracking-widest"
+              className={`${field} font-normal tracking-widest`}
             />
           </label>
           {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
-          <button
-            type="submit"
-            disabled={busy}
-            className="w-full rounded-md bg-zinc-900 px-3 py-2 text-sm text-white hover:bg-zinc-800 disabled:opacity-60"
-          >
+          <button type="submit" disabled={busy} className={`${btnPrimary} w-full`}>
             {busy ? "Checking…" : "Verify"}
           </button>
         </>

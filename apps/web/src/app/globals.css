@@ -5,34 +5,38 @@
 /*
  * Aethel palette. The shadcn semantic tokens (background, primary, muted ...) are mapped onto it,
  * so components from the shadcn registry pick up the brand without per-component overrides.
- *   ground  mist       ink  ridge ink       field  shola green       action  trail blaze
+ *   ground  warm cream   ink  deep navy   action  trail orange   plus sunny yellow. Four colours in all.
  */
 :root {
-  --background: #e6ece9;
-  --foreground: #10201d;
-  --card: #f2f6f4;
-  --card-foreground: #10201d;
-  --popover: #f2f6f4;
-  --popover-foreground: #10201d;
+  --background: #fffaf1;
+  --foreground: #0b2545;
+  --card: #ffffff;
+  --card-foreground: #0b2545;
+  --popover: #ffffff;
+  --popover-foreground: #0b2545;
   --primary: #ff5a1f;
-  --primary-foreground: #10201d;
-  --secondary: #d3ddd8;
-  --secondary-foreground: #10201d;
-  --muted: #d3ddd8;
-  --muted-foreground: #4d5d59;
-  --accent: #d3ddd8;
-  --accent-foreground: #10201d;
+  --primary-foreground: #0b2545;
+  --secondary: #ffeccc;
+  --secondary-foreground: #0b2545;
+  --muted: #fdeed3;
+  --muted-foreground: #4a5d75;
+  --accent: #ffeccc;
+  --accent-foreground: #0b2545;
   --destructive: #b42318;
-  --border: #c3cec9;
-  --input: #c3cec9;
+  --border: #eadfcc;
+  --input: #eadfcc;
   --ring: #ff5a1f;
   --radius: 0.5rem;
 
   /* Brand-only tokens */
-  --ink: #10201d;
-  --shola: #264a3c;
-  --blaze: #ff5a1f;
-  --link: #b8400a; /* blaze darkened so it passes 4.5:1 as text on mist */
+  --ink: #0b2545; /* deep navy for text and dark bands */
+  --shola: #0e5e6f; /* teal behind photographs while they load */
+  --blaze: #ff5a1f; /* the action colour */
+  --link: #b83c07; /* blaze darkened so it passes 4.5:1 as text on cream */
+
+  /* Sunny yellow: highlights, labels and bands. Never for text on light ground (1.5:1); navy text on it is 9.7:1. */
+  --sun: #ffc531;
+  --sun-soft: #fff1bf; /* the same yellow, diluted */
 }
 
 @theme inline {
@@ -63,6 +67,8 @@
   --color-shola: var(--shola);
   --color-blaze: var(--blaze);
   --color-link: var(--link);
+  --color-sun: var(--sun);
+  --color-sun-soft: var(--sun-soft);
   /* Older names used across the site */
   --color-brand: var(--blaze);
   --color-brand-ink: var(--ink);

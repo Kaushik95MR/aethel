@@ -24,7 +24,7 @@ export function DestinationCard({
           alt={photo.alt}
           fill
           priority={priority}
-          sizes={wide ? "(min-width: 640px) 50vw, 100vw" : "(min-width: 640px) 33vw, 100vw"}
+          sizes={wide ? "(min-width: 640px) 100vw, 150vw" : "(min-width: 640px) 66vw, 150vw"}
           className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
         />
       )}

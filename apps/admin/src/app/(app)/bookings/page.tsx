@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { formatDate, formatPaise, sanitizeSearch } from "@/lib/format";
 import { PAGE_SIZE, Pagination, parsePage } from "@/components/pagination";
 import { StatusBadge } from "@/components/status-badge";
+import { btn, Flash, PageHeader } from "@/components/ui";
 
 const STATUSES = ["pending", "confirmed", "completed", "cancelled"] as const;
 
@@ -74,20 +75,17 @@ export default async function BookingsPage({
   }
 
   return (
-    <div className="space-y-4">
-      <div>
-        <h1 className="text-xl font-medium">Bookings</h1>
-        <p className="text-sm text-zinc-500">Latest travel dates first.</p>
-      </div>
+    <>
+      <PageHeader title="Bookings" description="Latest travel dates first." />
 
       <form className="flex flex-wrap items-center gap-2 text-sm">
         <input
           name="q"
           defaultValue={q}
           placeholder="Search reference or customer"
-          className="w-64 rounded-md border border-zinc-300 bg-white px-3 py-1.5"
+          className="w-64 rounded-lg border border-zinc-300 bg-white px-3 py-1.5"
         />
-        <select name="status" defaultValue={status ?? ""} className="rounded-md border border-zinc-300 bg-white px-2 py-1.5">
+        <select name="status" defaultValue={status ?? ""} className="rounded-lg border border-zinc-300 bg-white px-2.5 py-1.5">
           <option value="">All statuses</option>
           {STATUSES.map((s) => (
             <option key={s} value={s}>
@@ -95,7 +93,7 @@ export default async function BookingsPage({
             </option>
           ))}
         </select>
-        <button type="submit" className="rounded-md border border-zinc-300 bg-white px-3 py-1.5 hover:bg-zinc-50">
+        <button type="submit" className={btn}>
           Filter
         </button>
         {(q || status) && (
@@ -105,18 +103,14 @@ export default async function BookingsPage({
         )}
       </form>
 
-      {error && (
-        <p role="alert" className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
-          Couldn&apos;t load bookings. Refresh to try again.
-        </p>
-      )}
+      {error && <Flash tone="error">Couldn&apos;t load bookings. Refresh to try again.</Flash>}
 
-      <div className="overflow-x-auto rounded-lg border border-zinc-200 bg-white">
+      <div className="overflow-x-auto rounded-xl border border-zinc-200 bg-white">
         <table className="w-full text-left text-sm">
-          <thead className="border-b border-zinc-200 text-zinc-500">
+          <thead className="border-b border-zinc-200 text-xs text-zinc-500">
             <tr>
               {["Reference", "Customer", "Trip", "Travel date", "Total", "Status", "Payment"].map((h) => (
-                <th key={h} className="px-3 py-2 font-normal">
+                <th key={h} className="px-4 py-2.5 font-normal">
                   {h}
                 </th>
               ))}
@@ -127,15 +121,19 @@ export default async function BookingsPage({
               const pay = summaries.get(r.id);
               return (
                 <tr key={r.id} className="border-b border-zinc-100 last:border-0 hover:bg-zinc-50">
-                  <td className="whitespace-nowrap px-3 py-2 font-medium">{r.reference}</td>
-                  <td className="px-3 py-2">{r.customer?.full_name ?? "—"}</td>
-                  <td className="px-3 py-2">{r.package?.title ?? r.title ?? "—"}</td>
-                  <td className="whitespace-nowrap px-3 py-2">{formatDate(r.start_date)}</td>
-                  <td className="whitespace-nowrap px-3 py-2">{formatPaise(r.total_paise)}</td>
-                  <td className="px-3 py-2">
+                  <td className="whitespace-nowrap px-4 py-3 font-medium">
+                    <Link href={`/bookings/${r.id}`} className="underline-offset-2 hover:underline">
+                      {r.reference}
+                    </Link>
+                  </td>
+                  <td className="px-4 py-3">{r.customer?.full_name ?? "—"}</td>
+                  <td className="px-4 py-3">{r.package?.title ?? r.title ?? "—"}</td>
+                  <td className="num whitespace-nowrap px-4 py-3">{formatDate(r.start_date)}</td>
+                  <td className="num whitespace-nowrap px-4 py-3">{formatPaise(r.total_paise)}</td>
+                  <td className="px-4 py-3">
                     <StatusBadge status={r.status} />
                   </td>
-                  <td className="px-3 py-2">
+                  <td className="px-4 py-3">
                     <StatusBadge status={pay?.payment_status ?? "unpaid"} />
                   </td>
                 </tr>
@@ -143,7 +141,7 @@ export default async function BookingsPage({
             })}
             {rows.length === 0 && !error && (
               <tr>
-                <td colSpan={7} className="px-3 py-8 text-center text-zinc-500">
+                <td colSpan={7} className="px-4 py-10 text-center text-zinc-500">
                   {q || status ? "No bookings match those filters." : "No bookings yet. Convert an enquiry to create the first one."}
                 </td>
               </tr>
@@ -153,6 +151,6 @@ export default async function BookingsPage({
       </div>
 
       <Pagination page={page} total={count ?? 0} basePath="/bookings" params={{ q, status }} />
-    </div>
+    </>
   );
 }

@@ -1,4 +1,6 @@
 import { Suspense } from "react";
+import { Brand } from "@/components/brand";
+import { btnPrimary, field, Flash } from "@/components/ui";
 import { signIn } from "./actions";
 
 const MESSAGES: Record<string, string> = {
@@ -21,38 +23,23 @@ async function LoginForm({ searchParams }: Props) {
   const message = error ? MESSAGES[error] : undefined;
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-zinc-50 px-4">
+    <main className="flex min-h-screen flex-col items-center justify-center gap-6 px-4">
+      <Brand />
       <form action={signIn} className="w-full max-w-sm space-y-4 rounded-xl border border-zinc-200 bg-white p-6">
         <div>
-          <h1 className="text-lg font-medium">Staff sign in</h1>
+          <h1 className="font-display text-xl font-semibold">Staff sign in</h1>
           <p className="text-sm text-zinc-500">Access is by invitation only.</p>
         </div>
-        {message && (
-          <p role="alert" className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
-            {message}
-          </p>
-        )}
-        <label className="block text-sm">
+        {message && <Flash tone="error">{message}</Flash>}
+        <label className="block space-y-1.5 text-sm font-medium">
           Email
-          <input
-            name="email"
-            type="email"
-            autoComplete="username"
-            required
-            className="mt-1 w-full rounded-md border border-zinc-300 px-3 py-2"
-          />
+          <input name="email" type="email" autoComplete="username" required className={`${field} font-normal`} />
         </label>
-        <label className="block text-sm">
+        <label className="block space-y-1.5 text-sm font-medium">
           Password
-          <input
-            name="password"
-            type="password"
-            autoComplete="current-password"
-            required
-            className="mt-1 w-full rounded-md border border-zinc-300 px-3 py-2"
-          />
+          <input name="password" type="password" autoComplete="current-password" required className={`${field} font-normal`} />
         </label>
-        <button type="submit" className="w-full rounded-md bg-zinc-900 px-3 py-2 text-sm text-white hover:bg-zinc-800">
+        <button type="submit" className={`${btnPrimary} w-full`}>
           Continue
         </button>
       </form>

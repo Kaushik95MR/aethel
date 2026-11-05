@@ -3,6 +3,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { headers } from "next/headers";
 import { z } from "zod";
+import { CATEGORY_SLUGS } from "@/lib/categories";
 
 export type EnquiryState = { ok: boolean; error?: string; fieldErrors?: Record<string, string> };
 
@@ -12,6 +13,7 @@ const schema = z
     email: z.string().trim().max(200).email("Enter a valid email").or(z.literal("")),
     phone: z.string().trim().max(30).regex(/^[0-9+()\-\s]*$/, "Enter a valid phone number"),
     package: z.string().trim().max(120),
+    trip_type: z.string().refine((v) => v === "" || CATEGORY_SLUGS.includes(v), "Pick a trip type from the list"),
     destination: z.string().trim().max(160),
     start: z.string().regex(/^(\d{4}-\d{2}-\d{2})?$/, "Enter a valid date"),
     flexible: z.boolean(),
@@ -41,6 +43,7 @@ export async function submitEnquiry(_prev: EnquiryState, formData: FormData): Pr
     email: formData.get("email") ?? "",
     phone: formData.get("phone") ?? "",
     package: formData.get("package") ?? "",
+    trip_type: formData.get("trip_type") ?? "",
     destination: formData.get("destination") ?? "",
     start: formData.get("start") ?? "",
     flexible: formData.get("flexible") === "on",
@@ -79,6 +82,7 @@ export async function submitEnquiry(_prev: EnquiryState, formData: FormData): Pr
     email: v.email || null,
     phone: v.phone || null,
     package_id: packageId,
+    trip_type: v.trip_type || null,
     destination_interest: v.destination || null,
     preferred_start: v.start || null,
     flexible_dates: v.flexible,

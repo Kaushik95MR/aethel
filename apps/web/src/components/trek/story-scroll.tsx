@@ -4,25 +4,41 @@ import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { setStoryScene, type SceneId } from "@/lib/story-sound";
 
-export type Scene = { kind: "photo"; src: string; alt: string } | { kind: "bus" };
-export type Chapter = { label: string; when: string; title: string; text: string; scene: Scene; sound: SceneId };
+export type Scene = { kind: "photo"; src: string; alt: string } | { kind: "video"; src: string } | { kind: "bus" };
+export type Chapter = {
+  id: string;
+  label: string;
+  when: string;
+  title: string;
+  text: string;
+  /** Vehicle and place, e.g. "Bus · Bengaluru to Kukke Subramanya". */
+  meta?: string;
+  mapsUrl?: string | null;
+  /** Where the bus is heading, shown on the roadside sign. */
+  destination?: string | null;
+  /** Pick-up points for a pick-up chapter. */
+  stops?: { label: string; time: string; url: string | null }[];
+  scene: Scene;
+  sound: SceneId;
+  dayNo: number;
+  dayLabel: string;
+};
 
 const clamp = (v: number, a = 0, b = 1) => Math.min(b, Math.max(a, v));
 const ease = (t: number) => t * t * (3 - 2 * t);
 
-// The bus is chapter 1 (zero-based). It drives in from the left as the chapter opens, then on to the destination at the
-// right as you scroll into the next chapter. Chapter 1 stays on screen until the bus has gone.
-const BUS = 1;
-const BUS_LEAVES_AT = 1.75;
+// The bus chapter drives in from the left as it opens, then on to the destination at the right as you scroll into the
+// next chapter. It stays on screen until the bus has gone. `bus` is that chapter's index, or -1 when there is none.
+const BUS_LEAVE = 0.75;
 
-function busX(pos: number) {
-  if (pos < BUS) return -75 + 75 * ease(clamp((pos - 0.5) / 0.5));
-  return 85 * ease(clamp((pos - BUS) / (BUS_LEAVES_AT - BUS)));
+function busX(pos: number, bus: number) {
+  if (pos < bus) return -75 + 75 * ease(clamp((pos - (bus - 0.5)) / 0.5));
+  return 85 * ease(clamp((pos - bus) / BUS_LEAVE));
 }
 
-function activeFor(pos: number) {
+function activeFor(pos: number, bus: number) {
   const i = Math.floor(pos + 0.5);
-  return i === BUS + 1 && pos < BUS_LEAVES_AT ? BUS : Math.max(0, i);
+  return bus >= 0 && i === bus + 1 && pos < bus + BUS_LEAVE ? bus : Math.max(0, i);
 }
 
 type Mode = "bus" | "walk" | "jeep" | "fire" | "tent";
@@ -55,16 +71,17 @@ export function StoryScroll({ chapters }: { chapters: Chapter[] }) {
     const el = root.current;
     const st = stage.current;
     if (!el || !st) return;
-    const last = chapters.length - 1;
+    const last = Math.max(1, chapters.length - 1);
+    const bus = chapters.findIndex((c) => c.scene.kind === "bus");
     let raf = 0;
     const update = () => {
       raf = 0;
       const vh = window.innerHeight;
       const pos = (window.scrollY - (el.getBoundingClientRect().top + window.scrollY)) / vh;
-      st.style.setProperty("--bus-x", String(busX(pos)));
-      st.style.setProperty("--dest", String(ease(clamp((pos - 0.9) / 0.6))));
+      st.style.setProperty("--bus-x", String(busX(pos, bus)));
+      st.style.setProperty("--dest", String(ease(clamp((pos - (bus - 0.1)) / 0.6))));
       st.style.setProperty("--p", String(clamp(pos / last)));
-      const next = Math.min(last, activeFor(pos));
+      const next = Math.min(chapters.length - 1, activeFor(pos, bus));
       if (next !== activeRef.current) {
         activeRef.current = next;
         setActive(next);
@@ -81,7 +98,7 @@ export function StoryScroll({ chapters }: { chapters: Chapter[] }) {
       window.removeEventListener("resize", onScroll);
       if (raf) cancelAnimationFrame(raf);
     };
-  }, [chapters.length]);
+  }, [chapters]);
 
   // The soundscape follows the chapter on screen and goes quiet when the story is off screen.
   useEffect(() => {
@@ -103,13 +120,11 @@ export function StoryScroll({ chapters }: { chapters: Chapter[] }) {
   }, [chapters]);
 
   const mode = MODE[chapters[active]?.sound ?? "city"];
-  const last = chapters.length - 1;
+  const last = Math.max(1, chapters.length - 1);
   // Day markers: where each day begins on the line.
-  const days = [
-    { label: "Friday night", at: 0, chapter: 0 },
-    { label: "Saturday", at: 2 / last, chapter: 2 },
-    { label: "Sunday night", at: 1, chapter: last },
-  ];
+  const days = chapters.flatMap((c, i) =>
+    i === 0 || c.dayNo !== chapters[i - 1].dayNo ? [{ label: c.dayLabel, at: i / last, chapter: i }] : [],
+  );
 
   return (
     <section ref={root} data-header="photo" aria-label="Your weekend, chapter by chapter" className="relative bg-ink text-background">
@@ -117,7 +132,7 @@ export function StoryScroll({ chapters }: { chapters: Chapter[] }) {
         <div aria-hidden>
           {chapters.map((c, k) => (
             <div
-              key={c.label}
+              key={c.id}
               className="absolute inset-0 transition-opacity duration-700 ease-out"
               style={{ opacity: k === active ? 1 : 0 }}
             >
@@ -130,8 +145,21 @@ export function StoryScroll({ chapters }: { chapters: Chapter[] }) {
                   priority={k < 2}
                   className={`object-cover transition-transform duration-[7000ms] ease-out ${k === active ? "scale-100" : "scale-[1.07]"}`}
                 />
+              ) : c.scene.kind === "video" ? (
+                // Only the video on screen and its neighbours are loaded, so a long story doesn't download every clip at once.
+                Math.abs(k - active) <= 1 && (
+                  <video
+                    src={c.scene.src}
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    preload="metadata"
+                    className="absolute inset-0 size-full object-cover"
+                  />
+                )
               ) : (
-                <BusScene />
+                <BusScene destination={c.destination ?? null} />
               )}
               <div className="absolute inset-0 bg-gradient-to-r from-ink/85 via-ink/45 to-ink/10" />
             </div>
@@ -171,14 +199,42 @@ export function StoryScroll({ chapters }: { chapters: Chapter[] }) {
 
       <div className="relative z-10 -mt-[100svh]">
         {chapters.map((c, i) => (
-          <article key={c.label} id={`chapter-${i}`} data-chapter={i} className="flex h-[100svh] items-center">
+          <article key={c.id} id={`chapter-${i}`} data-chapter={i} className="flex h-[100svh] items-center">
             <div className="mx-auto w-full max-w-[88rem] px-5 sm:px-8">
               <div
                 className={`max-w-xl transition duration-500 ease-out ${i === active ? "translate-y-0 opacity-100" : "translate-y-4 opacity-20"}`}
               >
                 <p className="text-lg text-background/85">{c.when}</p>
                 <h2 className="mt-3 font-display text-[clamp(3rem,8vw,7rem)]">{c.title}</h2>
-                <p className="mt-6 max-w-md text-xl text-background">{c.text}</p>
+                {c.text && <p className="mt-6 max-w-md text-xl text-background">{c.text}</p>}
+                {c.stops && c.stops.length > 0 && (
+                  <ul className="mt-5 flex max-w-md flex-col gap-1.5 text-lg text-background">
+                    {c.stops.map((p) => (
+                      <li key={p.label} className="flex flex-wrap items-baseline gap-x-3">
+                        <span className="font-medium">{p.label}</span>
+                        {p.time && <span className="text-background/85">{p.time}</span>}
+                        {p.url && (
+                          <a href={p.url} target="_blank" rel="noopener noreferrer" className="text-background/85 underline underline-offset-4">
+                            Open in Maps
+                          </a>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {(c.meta || c.mapsUrl) && (
+                  <p className="mt-4 text-lg text-background/85">
+                    {c.meta}
+                    {c.mapsUrl && (
+                      <>
+                        {c.meta && " · "}
+                        <a href={c.mapsUrl} target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">
+                          Open in Maps
+                        </a>
+                      </>
+                    )}
+                  </p>
+                )}
               </div>
             </div>
           </article>
@@ -240,7 +296,7 @@ function Glyph({ mode }: { mode: Mode }) {
  * The Friday-night bus, drawn in code. It reads --bus-x (set from the scroll position): it rolls in from the left,
  * then drives off to the right toward Kukke Subramanya, which rises out of the haze as it gets closer.
  */
-function BusScene() {
+function BusScene({ destination }: { destination: string | null }) {
   return (
     <div className="absolute inset-0 overflow-hidden bg-[#071211]">
       <div className="story-beam" />
@@ -252,9 +308,11 @@ function BusScene() {
           <path d="M0 300 90 190l55 38 110-150 70 70 90-120 85 110 100-70v232Z" fill="#0f2824" />
           <path d="M120 300 230 210l60 40 120-110 80 60 90-70v170Z" fill="#163630" />
         </svg>
-        <p className="absolute bottom-[10%] right-[8%] rounded-sm border border-background/40 px-3 py-1.5 font-display text-2xl text-background">
-          Kukke Subramanya
-        </p>
+        {destination && (
+          <p className="absolute bottom-[10%] right-[8%] rounded-sm border border-background/40 px-3 py-1.5 font-display text-2xl text-background">
+            {destination}
+          </p>
+        )}
       </div>
 
       {/* The road and the bus. */}

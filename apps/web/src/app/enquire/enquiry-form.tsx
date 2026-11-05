@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import { CATEGORIES } from "@/lib/categories";
 import { submitEnquiry, type EnquiryState } from "./actions";
 
 const initial: EnquiryState = { ok: false };
@@ -15,7 +16,17 @@ function Err({ msg }: { msg?: string }) {
   ) : null;
 }
 
-export function EnquiryForm({ packageSlug, packageTitle }: { packageSlug: string; packageTitle: string | null }) {
+export function EnquiryForm({
+  packageSlug,
+  packageTitle,
+  tripType,
+  place,
+}: {
+  packageSlug: string;
+  packageTitle: string | null;
+  tripType: string;
+  place: string;
+}) {
   const [state, action, pending] = useActionState(submitEnquiry, initial);
   const fe = state.fieldErrors ?? {};
 
@@ -69,10 +80,22 @@ export function EnquiryForm({ packageSlug, packageTitle }: { packageSlug: string
         </label>
       </div>
 
+      <label className="block text-sm">
+        What kind of trip?
+        <select name="trip_type" defaultValue={tripType} className={field}>
+          <option value="">Not sure yet</option>
+          {CATEGORIES.map((c) => (
+            <option key={c.slug} value={c.slug}>
+              {c.name}
+            </option>
+          ))}
+        </select>
+      </label>
+
       {!packageTitle && (
         <label className="block text-sm">
           Where would you like to go?
-          <input name="destination" className={field} placeholder="e.g. Kerala, Ladakh, Bali" />
+          <input name="destination" defaultValue={place} className={field} placeholder="e.g. Kerala, Ladakh, Bali" />
         </label>
       )}
 

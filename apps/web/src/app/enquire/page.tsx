@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { getPackage } from "@/lib/catalogue";
+import { categoriesOf, categoryBySlug } from "@/lib/categories";
 import { EnquiryForm } from "./enquiry-form";
 
 export const metadata: Metadata = { title: "Plan my trip" };
@@ -23,5 +24,8 @@ async function Form({ searchParams }: { searchParams: PageProps<"/enquire">["sea
   const sp = await searchParams;
   const slug = typeof sp.package === "string" ? sp.package : "";
   const pkg = slug ? await getPackage(slug) : null;
-  return <EnquiryForm packageSlug={pkg ? slug : ""} packageTitle={pkg?.title ?? null} />;
+  // A trip's own category wins over the one in the link, so the form never contradicts the trip.
+  const type = categoryBySlug(typeof sp.type === "string" ? sp.type : null)?.slug ?? categoriesOf(pkg?.tags)[0]?.slug ?? "";
+  const place = typeof sp.destination === "string" ? sp.destination.slice(0, 100) : "";
+  return <EnquiryForm packageSlug={pkg ? slug : ""} packageTitle={pkg?.title ?? null} tripType={type} place={place} />;
 }

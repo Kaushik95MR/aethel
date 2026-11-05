@@ -1,26 +1,104 @@
 @import "tailwindcss";
 
+/*
+ * Aethel admin. A quiet working tool: a mist-green ground, white panels with one 1px edge, near-black primary buttons,
+ * and the brand orange only on data and the product mark. Existing pages use Tailwind's zinc scale, so zinc is remapped
+ * to green-tinted neutrals here and every screen inherits the same palette.
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --ground: #f6f8f7;
+  --surface: #ffffff;
+  --active: #e9eeeb;
+  --text: #10201d;
+  --muted: #55625c;
+  --accent: #ff5a1f;
+  --accent-pale: #fff0ea;
+  --focus: #1f6f5a;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-geist-sans), system-ui, sans-serif;
   --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-bricolage), var(--font-geist-sans), system-ui, sans-serif;
+
+  --color-zinc-50: #f6f8f7;
+  --color-zinc-100: #eef2f0;
+  --color-zinc-200: #e2e8e5;
+  --color-zinc-300: #cbd4d0;
+  --color-zinc-400: #8b9791;
+  --color-zinc-500: #55625c;
+  --color-zinc-600: #46524c;
+  --color-zinc-700: #333e39;
+  --color-zinc-800: #1e2925;
+  --color-zinc-900: #10201d;
+  --color-zinc-950: #0a1613;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  html {
+    color-scheme: light;
+  }
+  body {
+    background: var(--ground);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 20px;
+  }
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+  /* One control height and one focus ring everywhere. */
+  input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+  select {
+    min-height: 34px;
+  }
+  input,
+  select,
+  textarea {
+    border-radius: 8px;
+  }
+  input::placeholder,
+  textarea::placeholder {
+    color: #6b7771;
+  }
+  :focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+  }
+  button,
+  summary,
+  select,
+  [type="checkbox"],
+  [type="file"] + * {
+    cursor: pointer;
+  }
+  button:disabled {
+    cursor: not-allowed;
+  }
+  /* Numbers line up in every table and figure. */
+  table,
+  .num {
+    font-variant-numeric: tabular-nums;
+  }
+  td.num,
+  th.num {
+    text-align: right;
+  }
+  /* Details elements are used as quiet disclosures: no default marker. */
+  summary {
+    list-style: none;
+  }
+  summary::-webkit-details-marker {
+    display: none;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@media (prefers-reduced-motion: reduce) {
+  * {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
 }
