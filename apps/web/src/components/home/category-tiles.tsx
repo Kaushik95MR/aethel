@@ -9,7 +9,7 @@ export function CategoryTiles() {
     <div>
     <section id="kinds" className="mx-auto max-w-[88rem] scroll-mt-20 px-5 py-20 sm:px-8 sm:py-28">
       <h2 className="max-w-[18ch] font-display text-[clamp(2.2rem,4.8vw,4.2rem)] leading-[1.05] text-ink">Who are you travelling with?</h2>
-      <ul className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+      <ul className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         {CATEGORIES.map((c) => {
           const photo = photoFor(c.photo);
           return (
@@ -20,8 +20,8 @@ export function CategoryTiles() {
                     src={photo.src}
                     alt={photo.alt}
                     fill
-                    sizes="(min-width: 1024px) 64vw, (min-width: 640px) 130vw, 220vw"
-                    quality={90}
+                    sizes="(min-width: 1280px) 38vw, (min-width: 1024px) 60vw, (min-width: 640px) 95vw, 190vw"
+                    quality={80}
                     className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
                   />
                 )}

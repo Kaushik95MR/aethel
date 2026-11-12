@@ -29,7 +29,7 @@ export function PlaceIdeas() {
             <li key={p.name} className="shrink-0">
               <Link href={`/packages?q=${encodeURIComponent(p.name)}`} className="group flex w-28 flex-col items-center gap-3 sm:w-32">
                 <span className="relative size-28 overflow-hidden rounded-full bg-shola ring-4 ring-white shadow-md shadow-ink/15 transition-shadow group-hover:ring-primary sm:size-32">
-                  {photo && <Image src={photo.src} alt="" fill sizes="288px" quality={90} className="object-cover transition-transform duration-500 group-hover:scale-110" />}
+                  {photo && <Image src={photo.src} alt="" fill sizes="192px" quality={80} className="object-cover transition-transform duration-500 group-hover:scale-110" />}
                 </span>
                 <span className="text-center text-lg text-ink">{p.name}</span>
               </Link>

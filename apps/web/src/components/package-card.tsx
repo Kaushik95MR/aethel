@@ -21,7 +21,7 @@ export function PackageCard({ pkg, next }: { pkg: Pkg; next?: UpcomingDeparture 
             alt={photo.alt}
             fill
             sizes="(min-width: 1024px) 480px, (min-width: 640px) 60vw, 100vw"
-            quality={90}
+            quality={80}
             className="object-cover transition duration-500 group-hover:scale-105"
           />
         )}

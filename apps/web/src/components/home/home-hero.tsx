@@ -6,7 +6,7 @@ function Tile({ photo, className = "" }: { photo: string; className?: string }) 
   const p = photoFor(photo);
   return (
     <div className={`relative min-h-0 flex-1 overflow-hidden rounded-3xl bg-shola ${className}`}>
-      {p && <Image src={p.src} alt="" fill sizes="(min-width: 1024px) 60vw, 80vw" quality={90} className="object-cover" />}
+      {p && <Image src={p.src} alt="" fill sizes="(min-width: 1024px) 60vw, 80vw" quality={80} className="object-cover" />}
     </div>
   );
 }
@@ -48,7 +48,7 @@ export function HomeHero() {
         <div aria-hidden className="mx-auto mt-10 grid max-w-md grid-cols-3 gap-3 lg:hidden">
           {["ladakh", "taj-mahal", "goa"].map((k) => (
             <div key={k} className="relative aspect-[3/4] overflow-hidden rounded-3xl bg-shola">
-              {photoFor(k) && <Image src={photoFor(k)!.src} alt="" fill sizes="33vw" quality={90} className="object-cover" />}
+              {photoFor(k) && <Image src={photoFor(k)!.src} alt="" fill sizes="33vw" quality={80} className="object-cover" />}
             </div>
           ))}
         </div>
