@@ -1,3 +1,4 @@
+import { revalidateTag } from "next/cache";
 import { verifyWebhook } from "@/lib/cashfree";
 import { paymentIdFromOrder, settlePayment } from "@/lib/payments";
 import { createServiceClient } from "@/lib/service-client";
@@ -35,6 +36,7 @@ export async function POST(request: Request) {
   try {
     await settlePayment(paymentId);
     await db.from("payment_events").update({ processed_at: new Date().toISOString(), error: null }).eq("provider_event_id", eventId);
+    revalidateTag("catalogue", { expire: 0 });
   } catch (e) {
     const message = e instanceof Error ? e.message : "settle failed";
     await db.from("payment_events").update({ error: message.slice(0, 500) }).eq("provider_event_id", eventId);

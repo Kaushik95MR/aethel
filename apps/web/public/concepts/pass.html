@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aethel trip, concept A: The pass</title>
+<link rel="stylesheet" href="fonts.css">
+<style>
+:root{--navy:#0b2545;--cream:#fffaf1;--orange:#ff5a1f;--soft:#b4c0d2;--navy-soft:#4a5d75;--m:clamp(20px,2.2vw,32px);
+  --small:clamp(.8125rem,.79rem + .1vw,.875rem);--body:clamp(1.0625rem,1rem + .25vw,1.1875rem);--lead:clamp(1.25rem,1.1rem + .7vw,1.625rem);--head:clamp(2rem,1.3rem + 3.2vw,4rem)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font:400 var(--body)/1.5 Onest,system-ui,sans-serif;background:var(--navy);color:var(--cream)}
+a{color:inherit}
+img{display:block;max-width:100%}
+.d{font-family:Unbounded,sans-serif;font-weight:800;letter-spacing:-.03em;line-height:1;text-transform:uppercase}
+.btn{display:inline-flex;align-items:center;justify-content:center;height:60px;padding:0 40px;background:var(--orange);color:var(--navy);font:500 20px Onest,sans-serif;text-decoration:none}
+.btn.on-orange{background:var(--navy);color:var(--cream)}
+
+/* top bar: plain, wordmark + links */
+.bar{display:flex;align-items:center;justify-content:space-between;height:72px;padding:0 var(--m);background:var(--navy)}
+.bar img{height:56px;width:auto}
+.bar nav{display:flex;gap:40px;font-weight:500}
+.bar nav a{text-decoration:none}
+
+/* hero: flush-left shout on a flat orange field, a photograph stuck on across the seam */
+.hero{position:relative;height:calc(100svh - 72px);min-height:640px;overflow:hidden}
+.field{position:absolute;inset:0 0 18% 0;background:var(--orange);color:var(--navy)}
+.hero h1{position:absolute;left:var(--m);top:13%;font-size:10.4vw;line-height:.86;color:var(--navy)}
+.hero .meta{position:absolute;left:var(--m);bottom:calc(18% + 28px);color:var(--navy);font-size:var(--lead);line-height:1.3;max-width:26ch}
+.scrap{position:absolute;right:4vw;top:-4%;width:27vw;height:88%;transform:rotate(5deg);overflow:hidden;border-radius:999px 999px 0 0;background:var(--navy)}
+.scrap img{width:100%;height:100%;object-fit:cover}
+.band{position:absolute;inset:82% 0 0 0;display:flex;align-items:center;justify-content:space-between;gap:24px;padding:0 var(--m);background:var(--navy)}
+.band p{font-size:var(--lead);line-height:1.3;max-width:40ch}
+
+/* the pass: each date is a ticket, a flat panel with two notches */
+.passes{background:var(--cream);color:var(--navy);padding:clamp(80px,10vw,160px) var(--m)}
+.passes h2{font-size:var(--head);max-width:14ch;margin-bottom:clamp(40px,5vw,72px)}
+.pass{position:relative;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2.2fr) auto;align-items:center;gap:clamp(20px,3vw,48px);padding:clamp(28px,3vw,48px) clamp(24px,3vw,48px);margin-top:20px}
+.pass.a{background:var(--orange)}
+.pass.b{background:var(--navy);color:var(--cream)}
+.pass .date{font-size:clamp(64px,9vw,140px);line-height:.85}
+.pass .what{font-size:clamp(20px,2.1vw,30px);line-height:1.25}
+.pass .what small{display:block;margin-top:10px;font-size:var(--body);opacity:.85}
+.pass .btn{height:64px}
+.pass::before,.pass::after{content:"";position:absolute;width:44px;height:44px;border-radius:50%;background:var(--cream);left:calc(30% - 22px)}
+.pass::before{top:-22px}.pass::after{bottom:-22px}
+
+/* line-up at one type size */
+.lineup{background:var(--navy);color:var(--cream);padding:clamp(80px,10vw,160px) var(--m)}
+.lineup h2{font-size:var(--head);margin-bottom:clamp(32px,4vw,56px)}
+.row{display:grid;grid-template-columns:2fr 1.4fr 1.4fr auto;gap:24px;font-size:clamp(20px,2.1vw,30px);line-height:1.5;font-variant-numeric:tabular-nums}
+.row.day{color:var(--orange);margin-top:72px;margin-bottom:20px;display:block}
+.row.day:first-of-type{margin-top:0}
+.row span:last-child{text-align:right}
+
+/* host: two flat panels meeting edge to edge */
+.host{display:grid;grid-template-columns:1.15fr 1fr;min-height:70svh}
+.host .n{background:var(--orange);color:var(--navy);padding:var(--m);display:flex;flex-direction:column;justify-content:flex-end}
+.host .n h2{font-size:clamp(88px,12.6vw,190px);line-height:.85}
+.host .n p{font-size:var(--lead);margin-top:24px;max-width:24ch;line-height:1.25}
+.host .t{background:var(--cream);color:var(--navy);padding:clamp(40px,6vw,96px) var(--m);display:flex;flex-direction:column;justify-content:center;gap:28px}
+.host .t p{font-size:clamp(22px,2.1vw,32px);line-height:1.2;max-width:30ch}
+.host .t ul{list-style:none;font-size:var(--lead);line-height:1.5}
+
+/* how it works: one verb at a time over a photograph */
+.verb{position:relative;height:min(100svh,620px);display:grid;place-items:center;overflow:hidden;background:var(--navy)}
+.verb img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.verb h2{position:relative;font-size:clamp(96px,17vw,300px);color:var(--cream);line-height:.9}
+.verb p{position:absolute;left:var(--m);bottom:var(--m);max-width:32ch;padding:14px 18px;background:rgba(11,37,69,.78);font-size:var(--body)}
+
+/* close: the page's colours inverted */
+.close{min-height:90svh;background:var(--navy);color:var(--cream);padding:var(--m);display:flex;flex-direction:column;justify-content:space-between}
+.close h2{font-size:clamp(64px,9.6vw,150px);line-height:.92;margin-top:clamp(40px,8vw,120px)}
+.close .bottom{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;padding-bottom:16px}
+.close .bottom p{font-size:var(--lead);max-width:32ch;line-height:1.3}
+
+/* footer: photograph half, menu half */
+.foot{display:grid;grid-template-columns:1fr 1fr;min-height:100svh}
+.foot .ph{position:relative}
+.foot .ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.foot .menu{background:var(--cream);color:var(--navy);padding:var(--m);display:flex;flex-direction:column;justify-content:space-between}
+.foot .menu img{height:64px;width:auto;filter:none}
+.foot .menu ul{list-style:none;margin-top:80px}
+.foot .menu li{margin-bottom:28px}
+.foot .menu a{font-size:2.6vw;font-weight:500;text-decoration:none}
+.foot .blocks{display:flex;gap:48px;font-size:15px;margin-top:64px}
+.foot .legal{font-size:13px;color:var(--navy-soft)}
+
+@media (max-width:760px){
+  .bar nav{display:none}
+  .hero h1{font-size:12vw;top:8%}
+  .hero .meta{display:none}
+  .passes h2{font-size:8vw;max-width:none}
+  .pass{grid-template-columns:minmax(0,1fr)}
+  .pass .date{font-size:24vw}
+  .pass .what{font-size:18px}
+  .lineup h2{font-size:9vw}
+  .host .n h2{font-size:21vw}
+  .close h2{font-size:15vw}
+  .scrap{right:-8vw;width:58vw;height:50%;top:auto;bottom:16%}
+  .band{inset:78% 0 0 0;flex-direction:column;align-items:stretch;justify-content:center;padding:0 20px}
+  .band p{font-size:17px}
+  .field{inset:0 0 22% 0}
+  .band .btn{width:100%}
+  .pass{grid-template-columns:1fr;gap:12px}
+  .pass::before,.pass::after{left:calc(50% - 22px)}
+  .row{grid-template-columns:1fr auto;font-size:20px}
+  .row span:nth-child(2),.row span:nth-child(3){grid-column:1;font-size:14px;color:var(--soft)}
+  .row span:last-child{grid-column:2;grid-row:1}
+  .host{grid-template-columns:1fr}
+  .verb h2{font-size:24vw}
+  .foot{grid-template-columns:1fr}.foot .ph{height:50svh}.foot .menu a{font-size:7vw}
+  .close .bottom{flex-direction:column;align-items:stretch}.close .btn{width:100%}
+}
+</style>
+</head>
+<body>
+
+<header class="bar">
+  <a href="#"><img src="/brand/logo.png" alt="Aethel trip"></a>
+  <nav aria-label="Main"><a href="#">Trips</a><a href="#">Hosts</a><a href="#">How it works</a></nav>
+</header>
+
+<section class="hero">
+  <div class="field"></div>
+  <h1 class="d">Gokarna<br>18 Dec</h1>
+  <p class="meta">Two nights by the sea from Bengaluru. From ₹6,499. Meera hosts.</p>
+  <div class="scrap"><img src="img/kudle-bay.jpg" alt="Kudle Beach bay at Gokarna with green hills and golden grass"></div>
+  <div class="band">
+    <p>A weekend by the sea with a host, a group of new friends and a real party at night. 15 seats left.</p>
+    <a class="btn" href="#">I'm in</a>
+  </div>
+</section>
+
+<section id="tickets" class="passes">
+  <h2 class="d">Pick your night</h2>
+  <div class="pass a">
+    <div class="date d">18<br>Dec</div>
+    <div class="what">Gokarna beach party weekend, with Meera<small>Friday night from Bengaluru, back on Sunday. 15 seats left.</small></div>
+    <a class="btn on-orange" href="#">I'm in</a>
+  </div>
+  <div class="pass b">
+    <div class="date d">8<br>Jan</div>
+    <div class="what">Gokarna beach party weekend, with Meera<small>Friday night from Bengaluru, back on Sunday. 16 seats left.</small></div>
+    <a class="btn" href="#">I'm in</a>
+  </div>
+</section>
+
+<section id="lineup" class="lineup">
+  <h2 class="d">The weekend</h2>
+  <div class="row day">Friday</div>
+  <div class="row"><span>Bus from Bengaluru</span><span>Meet your host</span><span>Pick-up point</span><span>9:30 pm</span></div>
+  <div class="row day">Saturday</div>
+  <div class="row"><span>Breakfast and beach time</span><span>The whole group</span><span>Kudle Beach</span><span>8:00 am</span></div>
+  <div class="row"><span>Kayaking</span><span>Small boats</span><span>The sea</span><span>11:00 am</span></div>
+  <div class="row"><span>Sunset</span><span>Bring a jacket</span><span>The rocks</span><span>6:00 pm</span></div>
+  <div class="row"><span>Beach party and bonfire</span><span>Music and lights</span><span>On the sand</span><span>9:00 pm</span></div>
+  <div class="row day">Sunday</div>
+  <div class="row"><span>Sunrise walk</span><span>Slow and quiet</span><span>Om Beach</span><span>6:00 am</span></div>
+  <div class="row"><span>Bus home</span><span>Back by night</span><span>Bengaluru</span><span>4:00 pm</span></div>
+</section>
+
+<section id="host" class="host" aria-label="Your host">
+  <div class="n"><h2 class="d">Meera</h2><p>Beach person. Sunset chaser.</p></div>
+  <div class="t">
+    <p>I plan trips for people who say they are not the group-trip type. Beaches, bonfires and good playlists.</p>
+    <ul><li>Beach parties</li><li>Bonfire nights</li><li>Music</li><li>Solo friendly</li></ul>
+    <a class="btn" href="#" style="align-self:flex-start">See her trips</a>
+  </div>
+</section>
+
+<section id="how" class="verb"><img src="img/kudle-bay.jpg" alt="Kudle Beach bay"><h2 class="d">Pick</h2><p>Choose a date and see who is hosting it.</p></section>
+<section class="verb"><img src="img/goa-party-lights.jpg" alt="Lights at a beach party"><h2 class="d">Say yes</h2><p>Send a quick enquiry. We confirm your seat and send a secure payment link.</p></section>
+<section class="verb"><img src="img/kudle-sunset.jpg" alt="Sunset over rocks at Kudle Beach"><h2 class="d">Go</h2><p>Your host shares the plan and pick-up details. Then it is the beach, the music and the bonfire.</p></section>
+
+<section id="close" class="close">
+  <h2 class="d">See you<br>on Friday.</h2>
+  <div class="bottom"><p>Two dates, 31 seats between them. Nothing is charged today.</p><a class="btn" href="#">I'm in</a></div>
+</section>
+
+<footer id="foot" class="foot">
+  <div class="ph"><img src="img/goa-beach-night.jpg" alt="Fireworks over a beach at night on the Goa coast"></div>
+  <div class="menu">
+    <div>
+      <img src="/brand/logo.png" alt="Aethel trip" style="background:var(--navy);padding:6px 14px">
+      <ul class="d" style="font-family:Unbounded;font-weight:800;text-transform:uppercase"><li><a href="#">Trips</a></li><li><a href="#">Hosts</a></li><li><a href="#">How it works</a></li><li><a href="#">Plan a trip</a></li><li><a href="#">Log in</a></li></ul>
+      <div class="blocks"><div>Bengaluru, India</div><div>Photos by other photographers, credited on each trip page.</div></div>
+    </div>
+    <div class="legal">Aethel trip. Sample content for a design concept.</div>
+  </div>
+</footer>
+</body>
+</html>

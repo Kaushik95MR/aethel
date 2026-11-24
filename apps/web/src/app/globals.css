@@ -3,40 +3,39 @@
 @import "shadcn/tailwind.css";
 
 /*
- * Aethel palette. The shadcn semantic tokens (background, primary, muted ...) are mapped onto it,
- * so components from the shadcn registry pick up the brand without per-component overrides.
- *   ground  warm cream   ink  deep navy   action  trail orange   plus sunny yellow. Four colours in all.
+ * Aethel trip palette. Navy ground, cream text, orange for actions and accents. Three colours in all, and no yellow;
+ * the other navies are lighter steps of the same navy, used for cards and lines. The shadcn semantic tokens
+ * (background, primary, muted ...) are mapped onto it, so registry components pick up the brand.
  */
 :root {
-  --background: #fffaf1;
-  --foreground: #0b2545;
-  --card: #ffffff;
-  --card-foreground: #0b2545;
-  --popover: #ffffff;
-  --popover-foreground: #0b2545;
+  --background: #0b2545;
+  --foreground: #fffaf1;
+  --card: #11305a;
+  --card-foreground: #fffaf1;
+  --popover: #11305a;
+  --popover-foreground: #fffaf1;
   --primary: #ff5a1f;
   --primary-foreground: #0b2545;
-  --secondary: #ffeccc;
-  --secondary-foreground: #0b2545;
-  --muted: #fdeed3;
-  --muted-foreground: #4a5d75;
-  --accent: #ffeccc;
-  --accent-foreground: #0b2545;
-  --destructive: #b42318;
-  --border: #eadfcc;
-  --input: #eadfcc;
+  --secondary: #17386a;
+  --secondary-foreground: #fffaf1;
+  --muted: #12315b;
+  --muted-foreground: #b4c0d2;
+  --accent: #17386a;
+  --accent-foreground: #fffaf1;
+  --destructive: #ff9f8f;
+  --border: #24477a;
+  --input: #2a4f85;
   --ring: #ff5a1f;
-  --radius: 0.5rem;
+  --radius: 0.75rem;
 
-  /* Brand-only tokens */
-  --ink: #0b2545; /* deep navy for text and dark bands */
-  --shola: #0e5e6f; /* teal behind photographs while they load */
+  /* Brand tokens */
+  --ink: #fffaf1; /* main text colour */
+  --cream: #fffaf1;
+  --navy: #0b2545;
+  --shola: #17386a; /* shows behind a photograph while it loads */
   --blaze: #ff5a1f; /* the action colour */
-  --link: #b83c07; /* blaze darkened so it passes 4.5:1 as text on cream */
-
-  /* Sunny yellow: highlights, labels and bands. Never for text on light ground (1.5:1); navy text on it is 9.7:1. */
-  --sun: #ffc531;
-  --sun-soft: #fff1bf; /* the same yellow, diluted */
+  --link: #ff7a45; /* the orange, a little lighter so text links read well on navy */
+  --sun: #ff5a1f; /* old name, kept for the accent classes: it is the orange now, the site has no yellow */
 }
 
 @theme inline {
@@ -64,14 +63,15 @@
   --color-ring: var(--ring);
 
   --color-ink: var(--ink);
+  --color-cream: var(--cream);
+  --color-navy: var(--navy);
   --color-shola: var(--shola);
   --color-blaze: var(--blaze);
   --color-link: var(--link);
   --color-sun: var(--sun);
-  --color-sun-soft: var(--sun-soft);
-  /* Older names used across the site */
+  /* Older names used by the enquiry and payment pages */
   --color-brand: var(--blaze);
-  --color-brand-ink: var(--ink);
+  --color-brand-ink: var(--primary-foreground);
   --color-line: var(--border);
   --color-surface: var(--card);
 
@@ -89,7 +89,7 @@
     @apply border-border outline-ring/50;
   }
   html {
-    color-scheme: light;
+    color-scheme: dark;
     @apply font-sans;
   }
   body {
@@ -98,12 +98,11 @@
   }
 }
 
-/* Display type is tight and narrow so large headlines can run edge to edge. */
+/* Headlines are friendly and chunky. */
 .font-display {
-  font-stretch: 82%;
-  font-weight: 650;
-  letter-spacing: -0.02em;
-  line-height: 0.95;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  line-height: 1.05;
 }
 
 :focus-visible {
@@ -111,7 +110,14 @@
   outline-offset: 3px;
 }
 
-/* The one entrance on the landing page: text fades up once. */
+/* A soft glow behind the hero: orange low on the left, a pale cream light high on the right. */
+.hero-glow {
+  background-image:
+    radial-gradient(52rem 30rem at 95% -5%, rgb(255 250 241 / 0.08), transparent 70%),
+    radial-gradient(44rem 30rem at -5% 105%, rgb(255 90 31 / 0.18), transparent 70%);
+}
+
+/* The one entrance on the home page: text fades up once. */
 @keyframes rise {
   from {
     opacity: 0;
@@ -120,6 +126,22 @@
 }
 .rise {
   animation: rise 0.6s ease-out both;
+}
+
+/* Sparkles twinkle slowly. */
+@keyframes twinkle {
+  0%,
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(0.8) rotate(12deg);
+    opacity: 0.75;
+  }
+}
+.twinkle {
+  animation: twinkle 3.2s ease-in-out infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -131,94 +153,4 @@
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
   }
-}
-
-/* Trek story: the party-bus scene is drawn with CSS so it needs no photograph. */
-@keyframes story-spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-@keyframes story-eq {
-  0%,
-  100% {
-    transform: scaleY(0.12);
-  }
-  50% {
-    transform: scaleY(1);
-  }
-}
-@keyframes story-bounce {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-4px);
-  }
-}
-@keyframes story-road {
-  to {
-    background-position-x: -120px;
-  }
-}
-.story-beam {
-  position: absolute;
-  left: 50%;
-  top: 34%;
-  width: 150vmax;
-  height: 150vmax;
-  margin: -75vmax 0 0 -75vmax;
-  background: conic-gradient(from 0deg, transparent 0 7%, rgba(255, 90, 31, 0.3) 9%, transparent 13% 50%, rgba(120, 190, 255, 0.24) 52%, transparent 56%);
-  mix-blend-mode: screen;
-  animation: story-spin 9s linear infinite;
-}
-.story-beam-b {
-  animation-duration: 14s;
-  animation-direction: reverse;
-  opacity: 0.8;
-}
-.story-bus {
-  animation: story-bounce 0.7s ease-in-out infinite;
-}
-.story-eq span {
-  transform-origin: bottom;
-  animation: story-eq calc(0.5s + var(--i) * 0.037s) ease-in-out infinite;
-  animation-delay: calc(var(--i) * -0.11s);
-}
-.story-wheel {
-  animation: story-spin 0.6s linear infinite;
-}
-.story-road {
-  background-image: repeating-linear-gradient(90deg, #ff5a1f 0 50px, transparent 50px 120px);
-  background-size: 120px 3px;
-  background-repeat: repeat-x;
-  background-position: 0 50%;
-  animation: story-road 0.7s linear infinite;
-}
-
-/* Timeline marker: a small pop when the carrier changes, and a walking cycle for the trekker. */
-@keyframes story-pop {
-  from {
-    transform: scale(0.6);
-    opacity: 0;
-  }
-}
-.story-pop {
-  animation: story-pop 0.25s ease-out both;
-}
-@keyframes story-leg {
-  0%,
-  100% {
-    transform: rotate(-22deg);
-  }
-  50% {
-    transform: rotate(22deg);
-  }
-}
-.story-leg-a {
-  animation: story-leg 0.7s ease-in-out infinite;
-}
-.story-leg-b {
-  animation: story-leg 0.7s ease-in-out infinite reverse;
 }

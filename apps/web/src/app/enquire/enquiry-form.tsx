@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState } from "react";
 import { CATEGORIES } from "@/lib/categories";
 import { submitEnquiry, type EnquiryState } from "./actions";
@@ -21,11 +22,17 @@ export function EnquiryForm({
   packageTitle,
   tripType,
   place,
+  startDate,
+  prefill,
+  signedIn,
 }: {
   packageSlug: string;
   packageTitle: string | null;
   tripType: string;
   place: string;
+  startDate: string;
+  prefill: { name: string; email: string; phone: string };
+  signedIn: boolean;
 }) {
   const [state, action, pending] = useActionState(submitEnquiry, initial);
   const fe = state.fieldErrors ?? {};
@@ -35,6 +42,15 @@ export function EnquiryForm({
       <div role="status" className="rounded-2xl border border-line bg-surface p-6">
         <h2 className="font-display text-2xl font-semibold">Thank you, we&apos;ve got it.</h2>
         <p className="mt-2 text-muted-foreground">One of our travel planners will get back to you shortly.</p>
+        {!signedIn && (
+          <p className="mt-4 text-muted-foreground">
+            Want your host and the group to know who&apos;s coming?{" "}
+            <Link href="/join" className="text-link underline underline-offset-4">
+              Create an account
+            </Link>
+            .
+          </p>
+        )}
       </div>
     );
   }
@@ -63,19 +79,19 @@ export function EnquiryForm({
 
       <label className="block text-sm">
         Your name
-        <input name="name" required autoComplete="name" className={field} />
+        <input name="name" required defaultValue={prefill.name} autoComplete="name" className={field} />
         <Err msg={fe.name} />
       </label>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="block text-sm">
           Email
-          <input name="email" type="email" autoComplete="email" className={field} />
+          <input name="email" type="email" defaultValue={prefill.email} autoComplete="email" className={field} />
           <Err msg={fe.email} />
         </label>
         <label className="block text-sm">
           Phone
-          <input name="phone" type="tel" autoComplete="tel" className={field} />
+          <input name="phone" type="tel" defaultValue={prefill.phone} autoComplete="tel" className={field} />
           <Err msg={fe.phone} />
         </label>
       </div>
@@ -102,7 +118,7 @@ export function EnquiryForm({
       <div className="grid gap-4 sm:grid-cols-3">
         <label className="block text-sm">
           Preferred start date
-          <input name="start" type="date" className={field} />
+          <input name="start" type="date" defaultValue={startDate} className={field} />
           <Err msg={fe.start} />
         </label>
         <label className="block text-sm">

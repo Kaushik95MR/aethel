@@ -30,7 +30,7 @@ const SELECT =
 
 export default function PayPage({ params }: PageProps<"/pay/[token]">) {
   return (
-    <div className="mx-auto max-w-md px-5 pb-12 pt-28">
+    <div className="mx-auto max-w-md px-5 pb-12 pt-10">
       <Suspense fallback={<p className="text-sm text-muted-foreground">Loading…</p>}>
         <Content params={params} />
       </Suspense>

@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aethel trip, concept E: Night glow</title>
+<link rel="stylesheet" href="fonts.css">
+<style>
+/* Every colour below was sampled from the "SAY YES" and "8 JAN" panels. */
+:root{--ink:#0a1322;--night:#0e1a2c;--deep:#121d30;--blue:#122e45;--steel:#2d4e5f;--teal:#4e7685;--mist:#c1cbc9;--glow:#c4eae7;--glow2:#8dc8ce;--box:#0b2141;--cream:#fffaf1;--btn:#e5623a;--soft:#aab8c4;
+  --m:clamp(20px,2.2vw,32px);--body:clamp(1.0625rem,1rem + .25vw,1.1875rem);--lead:clamp(1.25rem,1.1rem + .7vw,1.625rem);--head:clamp(2rem,1.3rem + 3.2vw,4rem)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font:400 var(--body)/1.5 Onest,system-ui,sans-serif;background:var(--ink);color:var(--cream)}
+a{color:inherit}
+img{display:block;max-width:100%}
+.d{font-family:Unbounded,sans-serif;font-weight:800;letter-spacing:-.03em;line-height:1;text-transform:uppercase}
+.btn{display:inline-flex;align-items:center;justify-content:center;height:60px;padding:0 40px;background:var(--btn);color:var(--ink);font:500 20px Onest,sans-serif;text-decoration:none}
+.btn.quiet{background:var(--glow)}
+
+.bar{display:flex;align-items:center;justify-content:space-between;height:72px;padding:0 var(--m);background:var(--ink)}
+.bar img{height:56px;width:auto}
+.bar nav{display:flex;gap:40px;font-weight:500}
+.bar nav a{text-decoration:none}
+
+.panel{position:relative;display:flex;flex-direction:column;justify-content:flex-end;padding:var(--m);overflow:hidden}
+.cap{background:var(--box);padding:16px 22px;font-size:var(--body);max-width:38ch;line-height:1.4}
+.cap b{font-weight:500;color:var(--glow)}
+.row{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;flex-wrap:wrap}
+
+.hero{height:min(74svh,660px);background:var(--night)}
+.hero h1{font-size:10.7vw;line-height:.92;margin-bottom:clamp(28px,3.4vw,52px)}
+
+.date{height:min(66svh,600px)}
+.date h2{font-size:clamp(88px,16vw,280px);line-height:.88;margin-bottom:clamp(24px,3vw,44px)}
+.date.one{background:var(--steel)}
+.date.two{background:var(--blue)}
+
+.lineup{background:var(--ink);padding:clamp(90px,10vw,160px) var(--m)}
+.lineup h2{font-size:var(--head);margin-bottom:clamp(32px,4vw,56px)}
+.tr{display:grid;grid-template-columns:2fr 1.4fr 1.4fr auto;gap:24px;font-size:clamp(20px,2.1vw,30px);line-height:1.5;font-variant-numeric:tabular-nums}
+.tr.day{color:var(--glow);margin:72px 0 20px;display:block}
+.tr.day:first-of-type{margin-top:0}
+.tr span:last-child{text-align:right;color:var(--glow)}
+
+.host{display:grid;grid-template-columns:1.15fr 1fr;gap:var(--m);background:var(--steel);padding:clamp(90px,10vw,160px) var(--m);align-items:end}
+.host h2{font-size:clamp(88px,12.6vw,200px);line-height:.85}
+.host .t{display:flex;flex-direction:column;gap:26px}
+.host .t p{font-size:clamp(22px,2.1vw,32px);line-height:1.2;max-width:30ch}
+.host .t ul{list-style:none;font-size:var(--lead);line-height:1.5;color:var(--glow)}
+
+.verb{height:min(70svh,600px);align-items:center;justify-content:center}
+.verb h2{font-size:clamp(96px,17vw,300px);line-height:.9;text-align:center}
+.verb .cap{position:absolute;left:var(--m);bottom:var(--m)}
+.verb.a{background:var(--steel)}
+.verb.b{background:var(--deep)}
+.verb.c{background:var(--glow);color:var(--ink)}
+.verb.c .cap{background:var(--ink);color:var(--cream)}
+
+.close{height:min(92svh,820px);background:var(--ink)}
+.close h2{font-size:clamp(64px,9.6vw,150px);line-height:.92;margin-bottom:clamp(28px,3.4vw,52px)}
+
+.foot{background:var(--steel);padding:40px var(--m) 24px;min-height:80svh;display:grid;grid-template-rows:auto 1fr auto}
+.cols{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;font-size:16px;line-height:1.6;color:var(--soft)}
+.cols div>*:first-child{color:var(--glow);font-weight:500}
+.cols img{height:56px;width:auto;margin-bottom:8px}
+.name{font-size:15.4vw;line-height:.88;margin-top:60px;color:var(--glow)}
+.legal{font-size:13px;color:var(--soft);margin-top:20px}
+
+@media (max-width:760px){
+  .bar nav{display:none}
+  .hero{height:min(60svh,520px)}.hero h1{font-size:12.2vw}
+  .date h2{font-size:25vw}
+  .tr{grid-template-columns:1fr auto;font-size:20px;margin-bottom:22px;gap:2px 16px}
+  .tr.day{margin:48px 0 16px}
+  .tr span:nth-child(2),.tr span:nth-child(3){grid-column:1;font-size:14px;color:var(--soft)}
+  .tr span:last-child{grid-column:2;grid-row:1}
+  .lineup h2{font-size:9vw}
+  .host{grid-template-columns:minmax(0,1fr)}.host h2{font-size:17.5vw}
+  .verb h2{font-size:22vw}
+  .close h2{font-size:12.4vw}
+  .row{flex-direction:column;align-items:stretch}.row .btn{width:100%}
+  .cols{grid-template-columns:1fr 1fr}.name{font-size:19vw}
+}
+</style>
+</head>
+<body>
+
+<header class="bar">
+  <a href="#"><img src="/brand/logo.png" alt="Aethel trip"></a>
+  <nav aria-label="Main"><a href="#">Trips</a><a href="#">Hosts</a><a href="#">How it works</a></nav>
+</header>
+
+<section class="panel hero" aria-label="Aethel trip">
+  <h1 class="d">Meet your<br>people.</h1>
+  <div class="row">
+    <p class="cap"><b>Gokarna beach party weekend</b>, Fri 18 Dec. A host, a group of new friends and a real party at night. 15 seats left.</p>
+    <a class="btn" href="#">I'm in</a>
+  </div>
+</section>
+
+<section id="d1" class="panel date one" aria-label="Friday 18 December">
+  <h2 class="d">18 Dec</h2>
+  <div class="row"><p class="cap"><b>Gokarna beach party weekend</b>, hosted by Meera. 15 seats left, from ₹6,499.</p><a class="btn" href="#">I'm in</a></div>
+</section>
+<section id="d2" class="panel date two" aria-label="Friday 8 January">
+  <h2 class="d">8 Jan</h2>
+  <div class="row"><p class="cap"><b>Gokarna beach party weekend</b>, hosted by Meera. 16 seats left, from ₹6,499.</p><a class="btn" href="#">I'm in</a></div>
+</section>
+
+<section id="lineup" class="lineup">
+  <h2 class="d">The weekend</h2>
+  <div class="tr day">Friday</div>
+  <div class="tr"><span>Bus from Bengaluru</span><span>Meet your host</span><span>Pick-up point</span><span>9:30 pm</span></div>
+  <div class="tr day">Saturday</div>
+  <div class="tr"><span>Breakfast and beach time</span><span>The whole group</span><span>Kudle Beach</span><span>8:00 am</span></div>
+  <div class="tr"><span>Kayaking</span><span>Small boats</span><span>The sea</span><span>11:00 am</span></div>
+  <div class="tr"><span>Sunset</span><span>Bring a jacket</span><span>The rocks</span><span>6:00 pm</span></div>
+  <div class="tr"><span>Beach party and bonfire</span><span>Music and lights</span><span>On the sand</span><span>9:00 pm</span></div>
+  <div class="tr day">Sunday</div>
+  <div class="tr"><span>Sunrise walk</span><span>Slow and quiet</span><span>Om Beach</span><span>6:00 am</span></div>
+  <div class="tr"><span>Bus home</span><span>Back by night</span><span>Bengaluru</span><span>4:00 pm</span></div>
+</section>
+
+<section id="host" class="host" aria-label="Your host">
+  <h2 class="d">Meera</h2>
+  <div class="t">
+    <p>I plan trips for people who say they are not the group-trip type. Beaches, bonfires and good playlists.</p>
+    <ul><li>Beach parties</li><li>Bonfire nights</li><li>Music</li><li>Solo friendly</li></ul>
+    <a class="btn quiet" href="#" style="align-self:flex-start">See her trips</a>
+  </div>
+</section>
+
+<section id="how" class="panel verb a"><h2 class="d">Pick</h2><p class="cap">Choose a date and see who is hosting it.</p></section>
+<section class="panel verb b"><h2 class="d">Say yes</h2><p class="cap">Send a quick enquiry. We confirm your seat and send a secure payment link.</p></section>
+<section class="panel verb c"><h2 class="d">Go</h2><p class="cap">Your host shares the plan and pick-up details. Then it is the beach, the music and the bonfire.</p></section>
+
+<section id="close" class="panel close" aria-label="See you on Friday">
+  <h2 class="d">See you<br>on Friday.</h2>
+  <div class="row"><p class="cap">Two dates, 31 seats between them. Nothing is charged today.</p><a class="btn" href="#">I'm in</a></div>
+</section>
+
+<footer id="foot" class="foot">
+  <div class="cols">
+    <div><img src="/brand/logo.png" alt="Aethel trip"><br>Bengaluru, India</div>
+    <div><span>Explore</span><br>Trips<br>Hosts<br>How it works</div>
+    <div><span>Account</span><br>Log in<br>Join</div>
+    <div><span>Contact</span><br>Plan a trip with us</div>
+  </div>
+  <span></span>
+  <div><div class="name d">Aethel<br>trip</div><p class="legal">Sample content for a design concept.</p></div>
+</footer>
+</body>
+</html>

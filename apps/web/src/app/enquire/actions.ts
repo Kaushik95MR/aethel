@@ -4,6 +4,7 @@ import { createClient } from "@supabase/supabase-js";
 import { headers } from "next/headers";
 import { z } from "zod";
 import { CATEGORY_SLUGS } from "@/lib/categories";
+import { createClient as createSessionClient } from "@/lib/supabase/server";
 
 export type EnquiryState = { ok: boolean; error?: string; fieldErrors?: Record<string, string> };
 
@@ -77,7 +78,23 @@ export async function submitEnquiry(_prev: EnquiryState, formData: FormData): Pr
     packageId = data?.id ?? null;
   }
 
+  // A logged-in visitor's enquiry is linked to their account, so it shows under "Your trips" and staff can see who they are.
+  let customerId: string | null = null;
+  try {
+    const session = await createSessionClient();
+    const {
+      data: { user },
+    } = await session.auth.getUser();
+    if (user) {
+      const { data: c } = await supabase.from("customers").select("id").eq("auth_user_id", user.id).maybeSingle();
+      customerId = c?.id ?? null;
+    }
+  } catch {
+    // Not signed in, or the session couldn't be read: the enquiry still goes through without a link.
+  }
+
   const { error } = await supabase.from("enquiries").insert({
+    customer_id: customerId,
     name: v.name,
     email: v.email || null,
     phone: v.phone || null,

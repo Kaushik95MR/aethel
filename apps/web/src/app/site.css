@@ -1,0 +1,284 @@
+/* Shared "night glow" pieces: the footer on every page, the plain content pages and the forms. */
+.gp,
+.sf {
+  --ink: #0a1322;
+  --night: #0e1a2c;
+  --deep: #121d30;
+  --blue: #122e45;
+  --steel: #2d4e5f;
+  --box: #0b2141;
+  --cream: #fffaf1;
+  --btn: #e5623a;
+  --soft: #aab8c4;
+  --glow: #c4eae7;
+  --m: clamp(20px, 2.2vw, 32px);
+  font-family: var(--font-onest), system-ui, sans-serif;
+  line-height: 1.5;
+}
+.gp a,
+.sf a {
+  color: inherit;
+  text-decoration: none;
+}
+.gp .d,
+.sf .d {
+  font-family: var(--font-unbounded), sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+/* ---------- footer ---------- */
+.sf {
+  background: var(--steel);
+  color: var(--cream);
+  padding: 40px var(--m) 24px;
+  min-height: min(56svh, 520px);
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+}
+.sf .cols {
+  display: grid;
+  grid-template-columns: 1.2fr repeat(4, 1fr);
+  gap: 24px;
+  font-size: 16px;
+  line-height: 1.9;
+  color: var(--soft);
+}
+.sf .cols .h {
+  display: block;
+  color: var(--glow);
+  font-weight: 500;
+}
+.sf .cols a:hover {
+  color: var(--cream);
+}
+.sf .name {
+  font-size: 11vw;
+  line-height: 0.9;
+  margin-top: 48px;
+  color: var(--glow);
+}
+.sf .legal {
+  font-size: 13px;
+  color: var(--soft);
+  margin-top: 20px;
+}
+
+/* ---------- plain content pages ---------- */
+.gp {
+  background: var(--ink);
+  color: var(--cream);
+  font-size: clamp(1.0625rem, 1rem + 0.25vw, 1.1875rem);
+}
+.gp .top {
+  background: var(--night);
+  padding: clamp(64px, 8vw, 120px) var(--m) clamp(40px, 5vw, 72px);
+}
+.gp .top h1 {
+  font-size: clamp(30px, 4.6vw, 72px);
+  line-height: 1;
+  overflow-wrap: anywhere;
+}
+.gp .top p {
+  margin-top: clamp(20px, 2.6vw, 36px);
+  max-width: 44ch;
+  font-size: clamp(17px, 1.4vw, 21px);
+  line-height: 1.3;
+  color: var(--glow);
+}
+.gp .body {
+  padding: clamp(48px, 6vw, 96px) var(--m) clamp(72px, 8vw, 128px);
+  max-width: 1100px;
+}
+.gp .body.wide {
+  max-width: none;
+}
+.gp .body h2 {
+  font-size: clamp(22px, 2.4vw, 34px);
+  line-height: 1.15;
+  font-weight: 500;
+  color: var(--glow);
+  margin: 2.2em 0 0.6em;
+}
+.gp .body h2:first-child {
+  margin-top: 0;
+}
+.gp .body p,
+.gp .body li {
+  max-width: 68ch;
+  margin-bottom: 0.9em;
+}
+.gp .body ul {
+  padding-left: 1.2em;
+}
+.gp .body a:not(.btn) {
+  color: var(--glow);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.gp .note {
+  background: var(--box);
+  padding: 16px 22px;
+  max-width: 68ch;
+  margin-bottom: 2.2em;
+  color: var(--cream);
+}
+.gp .note b {
+  color: var(--glow);
+  font-weight: 500;
+}
+.gp .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 60px;
+  padding: 0 40px;
+  background: var(--btn);
+  color: var(--ink);
+  font: 500 20px var(--font-onest), sans-serif;
+  border: 0;
+  cursor: pointer;
+}
+.gp .btn.quiet {
+  background: var(--glow);
+}
+.gp .btn[disabled] {
+  opacity: 0.6;
+}
+
+/* two-column fact blocks (about page) */
+.gp .facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--m);
+  margin: 2.4em 0;
+}
+.gp .facts > div {
+  background: var(--deep);
+  padding: clamp(20px, 2.4vw, 36px);
+}
+.gp .facts h3 {
+  font-size: clamp(20px, 2vw, 28px);
+  font-weight: 500;
+  color: var(--glow);
+  margin-bottom: 8px;
+}
+.gp .facts p {
+  margin: 0;
+}
+
+/* gallery */
+.gp .shots {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--m);
+}
+.gp .shots figure {
+  position: relative;
+  aspect-ratio: 4 / 5;
+  background: var(--deep);
+  overflow: hidden;
+}
+.gp .shots img {
+  object-fit: cover;
+}
+.gp .credits {
+  margin-top: 56px;
+  font-size: 14px;
+  color: var(--soft);
+}
+.gp .credits summary {
+  cursor: pointer;
+  color: var(--glow);
+}
+.gp .credits ul {
+  margin-top: 12px;
+  list-style: none;
+  padding: 0;
+}
+.gp .credits li {
+  max-width: none;
+  margin-bottom: 6px;
+}
+
+/* forms */
+.gform {
+  display: grid;
+  gap: 20px;
+  max-width: 520px;
+}
+.gform label {
+  display: block;
+  font-size: 16px;
+  color: var(--soft);
+}
+.gform input,
+.gform select {
+  display: block;
+  width: 100%;
+  height: 60px;
+  margin-top: 6px;
+  padding: 0 18px;
+  background: var(--box);
+  border: 0;
+  border-bottom: 2px solid var(--steel);
+  color: var(--cream);
+  font: 400 19px var(--font-onest), sans-serif;
+  border-radius: 0;
+}
+.gform select {
+  appearance: none;
+}
+.gform input:focus,
+.gform select:focus {
+  outline: 0;
+  border-bottom-color: var(--glow);
+}
+.gform .err {
+  display: block;
+  margin-top: 6px;
+  color: var(--btn);
+  font-size: 15px;
+}
+.gform .ok h3 {
+  font-size: clamp(26px, 3vw, 40px);
+  color: var(--glow);
+  font-weight: 500;
+}
+.gform .hp {
+  position: absolute;
+  left: -9999px;
+}
+.gform small {
+  color: var(--soft);
+  font-size: 14px;
+}
+
+@media (max-width: 860px) {
+  .sf .cols {
+    grid-template-columns: 1fr 1fr;
+  }
+  .sf .name {
+    font-size: 16vw;
+  }
+  .gp .facts {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .gp .shots {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .gp .btn {
+    width: 100%;
+  }
+}
+
+/* ---------- top bar: full width, lined up with the page edges ---------- */
+.site-header-inner {
+  padding-inline: clamp(20px, 2.2vw, 32px);
+}
+.site-header-inner nav {
+  margin-left: auto;
+  margin-right: 40px;
+}

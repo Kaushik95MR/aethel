@@ -2,15 +2,13 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Check, MapPin, X } from "lucide-react";
+import { Suspense } from "react";
 import { CallbackButton } from "@/components/callback-button";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { safeUrl } from "@/components/trek/chapters";
-import { getItinerary, getPackage, getPackages, type ItineraryStep } from "@/lib/catalogue";
+import { Travellers } from "@/components/travellers";
+import { getPackage, getPackages, type Departure } from "@/lib/catalogue";
 import { categoriesOf } from "@/lib/categories";
-import { formatDate, formatPaise } from "@/lib/format";
-import { isTrek } from "@/lib/treks";
-import { tripGallery } from "@/lib/trip-gallery";
+import { dayMonth } from "@/lib/catalogue-view";
+import { formatDay, formatPaise, formatTime, nightsLabel, seatsLabel } from "@/lib/format";
 
 export async function generateStaticParams() {
   const packages = await getPackages();
@@ -24,88 +22,20 @@ export async function generateMetadata({ params }: PageProps<"/packages/[slug]">
   return { title: pkg.seo_title ?? pkg.title, description: pkg.seo_description ?? pkg.summary ?? undefined };
 }
 
-const KIND: Record<string, string> = {
-  pickup: "Pick-up",
-  travel: "Travel",
-  trek: "Trek",
-  activity: "Activity",
-  meal: "Meal",
-  stay: "Stay",
-  free_time: "Free time",
-  drop_off: "Drop-off",
-};
-
-/** "21:00:00" becomes "9:00 pm". */
-function clock(t: string | null): string | null {
-  if (!t) return null;
-  const [h, m] = t.split(":").map(Number);
-  if (Number.isNaN(h)) return null;
-  return `${h % 12 || 12}:${String(m ?? 0).padStart(2, "0")} ${h < 12 ? "am" : "pm"}`;
-}
-
-function Place({ label, url }: { label: string; url: string | null }) {
-  const href = safeUrl(url);
-  return href ? (
-    <a href={href} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-link underline underline-offset-4">
-      <MapPin aria-hidden className="size-4" />
-      {label}
-    </a>
-  ) : (
-    <span>{label}</span>
-  );
-}
-
-function Step({ s }: { s: ItineraryStep }) {
-  const time = clock(s.start_time);
-  // Steps are often titled with their own kind ("Travel"), so only show the kind when it adds something.
-  const kind = KIND[s.kind] && KIND[s.kind].toLowerCase() !== s.title.trim().toLowerCase() ? KIND[s.kind] : null;
-  return (
-    <li className="grid grid-cols-[5.5rem_1fr] gap-x-4 border-t border-line py-4 first:border-t-0 first:pt-0">
-      <span className="text-sm text-muted-foreground">{time ?? kind ?? ""}</span>
-      <div>
-        <p className="font-medium text-ink">
-          {s.title}
-          {time && kind && <span className="ml-2 text-sm font-normal text-muted-foreground">{kind}</span>}
-        </p>
-        {s.description && <p className="mt-1 text-muted-foreground">{s.description}</p>}
-        <p className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-ink">
-          {s.vehicle && <span>By {s.vehicle.toLowerCase()}</span>}
-          {s.location && <Place label={s.location.label} url={s.location.maps_url} />}
-          {s.to_location && (
-            <>
-              <span aria-hidden>to</span>
-              <Place label={s.to_location.label} url={s.to_location.maps_url} />
-            </>
-          )}
-        </p>
-        {s.stops.length > 0 && (
-          <ul className="mt-2 space-y-1 text-sm text-ink">
-            {s.stops.map((p, i) => (
-              <li key={`${p.label}-${i}`} className="flex flex-wrap gap-x-2">
-                <span className="text-muted-foreground">Pick-up {i + 1}:</span>
-                <Place label={p.label} url={p.maps_url} />
-                {clock(p.time) && <span className="text-muted-foreground">at {clock(p.time)}</span>}
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-    </li>
-  );
-}
+const joinHref = (slug: string, d?: Departure) => `/enquire?package=${slug}${d ? `&date=${d.start_date}` : ""}`;
 
 export default async function TripPage({ params }: PageProps<"/packages/[slug]">) {
   const { slug } = await params;
   const pkg = await getPackage(slug);
   if (!pkg) notFound();
-  const itinerary = await getItinerary(slug);
-  const hasStory = !!itinerary?.days.some((d) => d.steps.length) || isTrek(slug);
-  const gallery = tripGallery(pkg, itinerary);
-  const kinds = categoriesOf(pkg.tags);
+
   const next = pkg.departures[0];
-  const days = itinerary?.days.some((d) => d.steps.length) ? itinerary.days : null;
-  const credits = gallery.flatMap((g) => (g.credit ? [g.credit] : []));
-  const enquire = `/enquire?package=${pkg.slug}`;
+  const host = next?.host ?? null;
+  const kinds = categoriesOf(pkg.tags);
+  const [hero, ...rest] = pkg.gallery;
+  const credits = pkg.gallery.flatMap((g) => (g.credit ? [g.credit] : []));
+  const placeholderPhotos = credits.some((c) => /ai-generated/i.test(c.author));
+  const going = next && next.seats_left !== null ? next.capacity - next.seats_left : 0;
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -119,147 +49,163 @@ export default async function TripPage({ params }: PageProps<"/packages/[slug]">
   };
 
   return (
-    <div className="mx-auto max-w-[88rem] px-5 pb-28 pt-28 sm:px-8 lg:pb-20">
+    <div className="gh">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
 
-      <nav aria-label="Breadcrumb" className="text-sm text-muted-foreground">
-        <Link href="/packages" className="underline underline-offset-4">
-          All trips
-        </Link>
-        {kinds[0] && (
-          <>
-            <span aria-hidden> / </span>
-            <Link href={`/packages?type=${kinds[0].slug}`} className="underline underline-offset-4">
-              {kinds[0].name}
-            </Link>
-          </>
-        )}
-      </nav>
-
-      <header className="mt-4 max-w-3xl">
-        <h1 className="font-display text-[clamp(2.4rem,5vw,4.4rem)] leading-[1.05] text-ink">{pkg.title}</h1>
-        {pkg.summary && <p className="mt-4 text-lg text-ink">{pkg.summary}</p>}
-        <ul className="mt-5 flex flex-wrap gap-2 text-ink">
-          <li className="rounded-full border border-ink/25 px-4 py-1.5">
-            {pkg.duration_days} {pkg.duration_days === 1 ? "day" : "days"}
-          </li>
-          {kinds.map((k) => (
-            <li key={k.slug} className="rounded-full border border-ink/25 px-4 py-1.5">
-              {k.name}
-            </li>
-          ))}
-          {pkg.destinations.map((d) => (
-            <li key={d.slug} className="rounded-full border border-ink/25 px-4 py-1.5">
-              {d.name}
-            </li>
-          ))}
-        </ul>
-      </header>
-
-      {gallery.length > 0 && (
-        <div className="mt-8 grid grid-cols-2 gap-3 lg:grid-cols-4 lg:grid-rows-2">
-          {gallery.map((g, i) => (
-            <div
-              key={g.src}
-              className={`relative overflow-hidden rounded-3xl bg-shola ${i === 0 ? "col-span-2 aspect-[16/10] lg:row-span-2 lg:aspect-auto lg:min-h-[26rem]" : "aspect-[4/3]"}`}
-            >
-              <Image src={g.src} alt={g.alt} fill quality={i === 0 ? 90 : 75} priority={i === 0} sizes={i === 0 ? "(min-width: 1024px) 70vw, 100vw" : "(min-width: 1024px) 40vw, 80vw"} className="object-cover" />
-            </div>
-          ))}
+      <section className="panel tphero" aria-label={pkg.title}>
+        {hero && <Image src={hero.src} alt={hero.alt} fill priority quality={80} sizes="100vw" />}
+        <h1 className="d">{pkg.title}</h1>
+        <div className="row">
+          <p className="cap">
+            {next ? <b>{dayMonth(next.start_date)} to {dayMonth(next.end_date)}</b> : <b>Dates coming soon</b>}. {nightsLabel(pkg.duration_days)}. From{" "}
+            {formatPaise(pkg.base_price_paise)}
+            {pkg.price_note ? ` ${pkg.price_note}` : " per person"}.
+            {next && seatsLabel(next.seats_left) ? ` ${seatsLabel(next.seats_left)}.` : ""}
+          </p>
+          <Link className="btn" href={joinHref(pkg.slug, next)}>
+            Book
+          </Link>
         </div>
-      )}
+      </section>
 
-      <div className="mt-12 grid gap-12 lg:grid-cols-[1fr_22rem]">
-        <div className="min-w-0 space-y-14">
-          {(pkg.description || pkg.highlights.length > 0) && (
+      <div className="tbody">
+        <div className="tmain">
+          {pkg.summary && (
             <section>
-              <h2 className="font-display text-3xl text-ink">About this trip</h2>
-              {pkg.description && <p className="mt-4 max-w-2xl whitespace-pre-line text-lg text-ink">{pkg.description}</p>}
+              <p className="tsum">{pkg.summary}</p>
+            </section>
+          )}
+
+          {pkg.party && (
+            <section aria-labelledby="party-h">
+              <h2 id="party-h" className="d">
+                The party
+              </h2>
+              <div className="tbox">
+                <p className="tsum">{pkg.party}</p>
+              </div>
+            </section>
+          )}
+
+          {host && (
+            <section aria-labelledby="host">
+              <h2 id="host" className="d">
+                Your host
+              </h2>
+              <div className="tbox thost">
+                <span className="ph">
+                  {host.photo ? <Image src={host.photo.src} alt="" fill sizes="176px" quality={80} style={{ objectFit: "cover" }} /> : host.name.slice(0, 1)}
+                </span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <p className="nm">{host.name}</p>
+                  {host.tagline && <p className="tg">{host.tagline}</p>}
+                </div>
+                <Link className="btn quiet small" href={`/hosts/${host.slug}`}>
+                  See profile
+                </Link>
+              </div>
+            </section>
+          )}
+
+          {next && (
+            <section aria-labelledby="going">
+              <h2 id="going" className="d">
+                Who is going
+              </h2>
+              <div className="tbox tgoing">
+                <p>
+                  {going > 0 ? (
+                    <>
+                      <span className="n">{going} going</span>. {seatsLabel(next.seats_left)}.
+                    </>
+                  ) : (
+                    <>
+                      <span className="n">{seatsLabel(next.seats_left) ?? `${next.capacity} seats`}</span>. Be the first to book.
+                    </>
+                  )}
+                </p>
+                <Suspense fallback={null}>
+                  <Travellers departureId={next.id} going={going} slug={pkg.slug} />
+                </Suspense>
+              </div>
+            </section>
+          )}
+
+          {pkg.description && (
+            <section>
+              <h2 className="d">About</h2>
+              <p className="tdesc">{pkg.description}</p>
               {pkg.highlights.length > 0 && (
-                <ul className="mt-5 grid gap-2 sm:grid-cols-2">
+                <ul className="thl">
                   {pkg.highlights.map((h) => (
-                    <li key={h} className="flex gap-2 text-ink">
-                      <Check aria-hidden className="mt-1 size-4 shrink-0 text-link" />
-                      {h}
-                    </li>
+                    <li key={h}>{h}</li>
                   ))}
                 </ul>
               )}
             </section>
           )}
 
-          <section id="itinerary" className="scroll-mt-24">
-            <div className="flex flex-wrap items-end justify-between gap-3">
-              <h2 className="font-display text-3xl text-ink">Day by day</h2>
-              {hasStory && (
-                <Link href={`/packages/${pkg.slug}/story`} className="text-lg text-link underline underline-offset-4">
-                  See it as a story, with sound
-                </Link>
-              )}
-            </div>
-            {days ? (
-              <Accordion defaultValue={[0]} className="mt-4">
-                {days.map((d, i) => (
-                  <AccordionItem key={d.day_no} value={i} className="border-line">
-                    <AccordionTrigger className="py-4 font-display text-2xl text-ink hover:no-underline">
-                      Day {d.day_no}: {d.title}
-                    </AccordionTrigger>
-                    <AccordionContent>
-                      {d.summary && <p className="mb-4 text-muted-foreground">{d.summary}</p>}
-                      <ul>
-                        {d.steps.map((s) => (
-                          <Step key={s.id} s={s} />
-                        ))}
-                      </ul>
-                    </AccordionContent>
-                  </AccordionItem>
-                ))}
-              </Accordion>
-            ) : pkg.days.length > 0 ? (
-              <Accordion defaultValue={[0]} className="mt-4">
-                {pkg.days.map((d, i) => (
-                  <AccordionItem key={d.day_no} value={i} className="border-line">
-                    <AccordionTrigger className="py-4 font-display text-2xl text-ink hover:no-underline">
-                      Day {d.day_no}: {d.title}
-                    </AccordionTrigger>
-                    <AccordionContent>
-                      {d.description && <p className="text-muted-foreground">{d.description}</p>}
-                      {(d.meals || d.stay || d.location) && (
-                        <p className="mt-2 text-sm text-ink">{[d.location, d.meals && `Meals: ${d.meals}`, d.stay && `Stay: ${d.stay}`].filter(Boolean).join(", ")}</p>
+          {pkg.days.length > 0 && (
+            <section id="plan" aria-labelledby="plan-h">
+              <h2 id="plan-h" className="d">
+                The plan
+              </h2>
+              <ol className="tplan">
+                {pkg.days.map((d) => (
+                  <li key={d.day_no}>
+                    <span className="dn">Day {d.day_no}</span>
+                    <div>
+                      <h3>{d.title}</h3>
+                      {d.description && <p>{d.description}</p>}
+                      {(d.meals || d.stay) && <p className="ms">{[d.meals && `Meals: ${d.meals}`, d.stay && `Stay: ${d.stay}`].filter(Boolean).join(". ")}</p>}
+                      {d.steps.length > 0 && (
+                        <ul className="steps-list">
+                          {d.steps.map((s, i) => (
+                            <li key={i}>
+                              <span className="when">{formatTime(s.start_time)}</span>
+                              <span className="what">
+                                <b>{s.title || s.kind.replace("_", " ")}</b>
+                                {s.place ? <small>{s.place}</small> : null}
+                                {s.description ? <small>{s.description}</small> : null}
+                                {s.photos.length > 0 && (
+                                  <span className="stepphotos">
+                                    {s.photos.slice(0, 3).map((ph) => (
+                                      <span key={ph.src} className="sp">
+                                        <Image src={ph.src} alt={ph.alt} fill quality={70} sizes="(min-width: 1000px) 14vw, 30vw" style={{ objectFit: "cover" }} />
+                                      </span>
+                                    ))}
+                                  </span>
+                                )}
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
                       )}
-                    </AccordionContent>
-                  </AccordionItem>
+                    </div>
+                  </li>
                 ))}
-              </Accordion>
-            ) : (
-              <p className="mt-4 text-lg text-muted-foreground">The detailed plan is shared when you enquire.</p>
-            )}
-          </section>
+              </ol>
+            </section>
+          )}
 
           {(pkg.inclusions.length > 0 || pkg.exclusions.length > 0) && (
-            <section className="grid gap-8 sm:grid-cols-2">
+            <section aria-label="What is included" className="tinc">
               {pkg.inclusions.length > 0 && (
                 <div>
-                  <h2 className="font-display text-3xl text-ink">Included</h2>
-                  <ul className="mt-4 space-y-2">
+                  <h2 className="d">Included</h2>
+                  <ul>
                     {pkg.inclusions.map((x) => (
-                      <li key={x} className="flex gap-2 text-ink">
-                        <Check aria-hidden className="mt-1 size-4 shrink-0 text-link" />
-                        {x}
-                      </li>
+                      <li key={x}>{x}</li>
                     ))}
                   </ul>
                 </div>
               )}
               {pkg.exclusions.length > 0 && (
                 <div>
-                  <h2 className="font-display text-3xl text-ink">Not included</h2>
-                  <ul className="mt-4 space-y-2">
+                  <h2 className="d">Not included</h2>
+                  <ul className="no">
                     {pkg.exclusions.map((x) => (
-                      <li key={x} className="flex gap-2 text-ink">
-                        <X aria-hidden className="mt-1 size-4 shrink-0 text-muted-foreground" />
-                        {x}
-                      </li>
+                      <li key={x}>{x}</li>
                     ))}
                   </ul>
                 </div>
@@ -267,79 +213,93 @@ export default async function TripPage({ params }: PageProps<"/packages/[slug]">
             </section>
           )}
 
-          <section>
-            <h2 className="font-display text-3xl text-ink">How booking works</h2>
-            <ol className="mt-5 grid gap-5 sm:grid-cols-3">
-              {[
-                ["Ask", "Request a callback or send an enquiry. A planner replies with the plan and price."],
-                ["Confirm", "Pick your date and who is travelling. We send a secure payment link."],
-                ["Go", "Pay online, then we share pick-up and packing details before you leave."],
-              ].map(([t, b], i) => (
-                <li key={t} className="rounded-3xl bg-surface p-5">
-                  <span className="font-display text-3xl text-link">{i + 1}</span>
-                  <h3 className="mt-1 font-display text-xl text-ink">{t}</h3>
-                  <p className="mt-1 text-muted-foreground">{b}</p>
-                </li>
-              ))}
-            </ol>
-          </section>
-
-          {credits.length > 0 && (
-            <details className="text-sm text-muted-foreground">
-              <summary className="cursor-pointer underline underline-offset-4">Photo credits</summary>
-              <ul className="mt-3 space-y-1">
-                {credits.map((c) => (
-                  <li key={c.source}>
-                    <a href={c.source} target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">
-                      {c.title}
-                    </a>
-                    , {c.author}, {c.license}
+          {rest.length > 0 && (
+            <section aria-label="Photos">
+              <ul className="tshots">
+                {rest.map((g, i) => (
+                  <li key={g.src}>
+                    <Image src={g.src} alt={g.alt} fill quality={75} sizes={i === 0 ? "(min-width: 1000px) 60vw, 92vw" : "(min-width: 1000px) 30vw, 46vw"} />
                   </li>
                 ))}
               </ul>
-            </details>
+            </section>
           )}
+
+          {credits.length > 0 &&
+            (placeholderPhotos ? (
+              <p className="tcredits">Photos on this page are AI-generated placeholders until we add pictures from real trips.</p>
+            ) : (
+              <details className="tcredits">
+                <summary>Photo credits</summary>
+                <p style={{ marginTop: 12, maxWidth: "62ch" }}>
+                  These photographs are by other photographers, shared under open licences, and show the feel of the coast. Some are from nearby places.
+                  We will add pictures from our own trips.
+                </p>
+                <ul>
+                  {[...new Map(credits.map((c) => [c.source, c])).values()].map((c) => (
+                    <li key={c.source} style={{ marginBottom: 6 }}>
+                      <a href={c.source} target="_blank" rel="noopener noreferrer">
+                        {c.title}
+                      </a>
+                      , {c.author},{" "}
+                      {c.licenseUrl ? (
+                        <a href={c.licenseUrl} target="_blank" rel="noopener noreferrer">
+                          {c.license}
+                        </a>
+                      ) : (
+                        c.license
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </details>
+            ))}
         </div>
 
-        <aside className="h-fit overflow-hidden rounded-3xl border border-line bg-surface p-6 shadow-lg shadow-ink/10 lg:sticky lg:top-24">
-          <p className="text-sm text-muted-foreground">From</p>
-          <p className="font-display text-4xl text-ink">{formatPaise(pkg.base_price_paise)}</p>
-          <p className="text-sm text-muted-foreground">{pkg.price_note ?? "per person"}</p>
+        <aside className="tbook" aria-label="Book">
+          <p className="from">From</p>
+          <p className="d pr">{formatPaise(pkg.base_price_paise)}</p>
+          <p className="from">{pkg.price_note ?? "per person"}</p>
 
-          <h2 className="mt-6 font-display text-xl text-ink">Upcoming dates</h2>
+          <h2>Pick a date</h2>
           {pkg.departures.length > 0 ? (
-            <ul className="mt-2 divide-y divide-line">
-              {pkg.departures.map((d) => (
-                <li key={d.id} className="flex justify-between gap-3 py-2 text-ink">
-                  <span>{formatDate(d.start_date)}</span>
-                  {d.seats_left !== null && <span className="text-muted-foreground">{d.seats_left > 0 ? `${d.seats_left} seats left` : "Sold out"}</span>}
-                </li>
-              ))}
+            <ul>
+              {pkg.departures.map((d) => {
+                const soldOut = d.seats_left !== null && d.seats_left <= 0;
+                return (
+                  <li key={d.id}>
+                    <div>
+                      <p className="dt">{formatDay(d.start_date)}</p>
+                      <p className="sm">
+                        {seatsLabel(d.seats_left)}
+                        {d.host ? `. With ${d.host.name}` : ""}
+                      </p>
+                    </div>
+                    {!soldOut && (
+                      <Link className="btn small" href={joinHref(pkg.slug, d)}>
+                        Book
+                      </Link>
+                    )}
+                  </li>
+                );
+              })}
             </ul>
           ) : (
-            <p className="mt-2 text-muted-foreground">New dates are being added. Ask us and we&apos;ll tell you the next one.</p>
+            <p className="sm">New dates are being added. Ask for a callback and we will tell you the next one.</p>
           )}
 
-          <div className="mt-6 flex flex-col gap-3">
-            <Link
-              href={enquire}
-              className="inline-flex min-h-12 items-center justify-center rounded-full bg-primary px-6 text-lg font-medium text-primary-foreground transition-opacity hover:opacity-90"
-            >
-              Plan this trip
-            </Link>
-            <CallbackButton slug={pkg.slug} title={pkg.title} className="inline-flex min-h-12 items-center justify-center rounded-full border border-ink px-6 text-lg font-medium text-ink transition-colors hover:bg-ink hover:text-background" />
-          </div>
-          <p className="mt-4 text-sm text-muted-foreground">You pay online with a secure link once we confirm your dates. Nothing is charged today.</p>
+          <CallbackButton slug={pkg.slug} title={pkg.title} className="cb" />
+          <p className="note">Nothing is charged today. We confirm your seat, then send a secure payment link.</p>
         </aside>
       </div>
 
-      <div className="fixed inset-x-0 bottom-0 z-30 flex items-center justify-between gap-4 border-t border-line bg-background/95 px-5 py-3 backdrop-blur lg:hidden">
+      <div className="mbar">
         <p>
-          <span className="block text-xs text-muted-foreground">From</span>
-          <span className="font-display text-2xl text-ink">{formatPaise(pkg.base_price_paise)}</span>
+          <small>From</small>
+          <span className="d pr">{formatPaise(pkg.base_price_paise)}</span>
         </p>
-        <Link href={enquire} className="inline-flex min-h-12 items-center rounded-full bg-primary px-6 text-lg font-medium text-primary-foreground">
-          Plan this trip
+        <Link className="btn" href={joinHref(pkg.slug, next)}>
+          Book
         </Link>
       </div>
     </div>
