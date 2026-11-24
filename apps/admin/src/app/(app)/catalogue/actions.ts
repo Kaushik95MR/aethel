@@ -73,6 +73,7 @@ export async function savePackage(formData: FormData) {
   if (!parsed.success || base_price_paise === "invalid") redirect(`${back}?error=invalid`);
 
   const { id, ...fields } = parsed.data;
+  if (isHost && id && !(await hostMayEdit(await createClient(), id))) redirect(`/catalogue/${id}?error=live_trip`);
   const chosen = formData.getAll("categories").map(String).filter((c) => CATEGORY_SLUGS.includes(c));
 
   const supabase = await createClient();
@@ -113,6 +114,15 @@ export async function savePackage(formData: FormData) {
   redirect(`/catalogue/${result.data.id}?saved=1`);
 }
 
+/**
+ * A host may change a trip only while it is still unpublished. A live trip can have bookings, which a host cannot see,
+ * so the "does this date have bookings" checks below would pass for them. Admins make changes to live trips.
+ */
+async function hostMayEdit(supabase: Awaited<ReturnType<typeof createClient>>, packageId: string) {
+  const { data } = await supabase.from("packages").select("status, review_state").eq("id", packageId).maybeSingle();
+  return !!data && data.status !== "published" && ["draft", "changes_requested"].includes(data.review_state);
+}
+
 const departureSchema = z
   .object({
     id: z.string().uuid().optional(),
@@ -128,8 +138,8 @@ const departureSchema = z
 
 /** Deletes a date nobody has booked. A date with bookings must be cancelled instead, so those bookings keep their trip. */
 export async function deleteDeparture(formData: FormData) {
-  // Admins can read bookings, so the check below can be trusted. A host has none to read: their trips are unpublished.
-  await requireStaff(["owner", "manager", "host"]);
+  // Admins can read bookings, so the check below can be trusted. A host cannot, so a host is limited to unpublished trips.
+  const staff = await requireStaff(["owner", "manager", "host"]);
   const p = z.object({ id: z.string().uuid(), package_id: z.string().uuid() }).safeParse({
     id: formData.get("id"),
     package_id: formData.get("package_id"),
@@ -138,6 +148,7 @@ export async function deleteDeparture(formData: FormData) {
   const back = `/catalogue/${p.data.package_id}?tab=dates`;
 
   const supabase = await createClient();
+  if (staff.role === "host" && !(await hostMayEdit(supabase, p.data.package_id))) redirect(`${back}&error=live_trip`);
   const { count } = await supabase.from("bookings").select("id", { count: "exact", head: true }).eq("departure_id", p.data.id);
   if (count) redirect(`${back}&error=has_bookings`);
 
@@ -168,6 +179,7 @@ export async function saveDeparture(formData: FormData) {
   if (!parsed.success || price === "invalid") redirect(`/catalogue/${pid.data}?tab=dates&error=invalid`);
 
   const { id, ...fields } = parsed.data;
+  if (isHost && !(await hostMayEdit(await createClient(), pid.data))) redirect(`/catalogue/${pid.data}?tab=dates&error=live_trip`);
   const row = {
     ...fields,
     itinerary_id: fields.itinerary_id ?? null,

@@ -20,6 +20,7 @@ const MESSAGES: Record<string, { tone: "ok" | "error"; text: string }> = {
   has_bookings: { tone: "error", text: "This date has bookings, so it can't be deleted. Set its status to Cancelled instead." },
   failed: { tone: "error", text: "Couldn't save. You may not have access." },
   submitted: { tone: "ok", text: "Submitted. An admin will review your trip and set the price." },
+  live_trip: { tone: "error", text: "This trip is live, so a host can't change it or delete its dates. Ask an admin." },
   locked: { tone: "error", text: "This trip is with an admin for review, so it can't be changed right now." },
   incomplete: { tone: "error", text: "Before you submit, add a summary, a description, at least one date and at least one itinerary step." },
   price_needed: { tone: "error", text: "Enter the price per person in rupees to approve this trip." },
