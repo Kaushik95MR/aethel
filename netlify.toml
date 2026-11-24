@@ -14,3 +14,11 @@
 # These two values are public by design: they are compiled into the browser code. Tell Netlify's secret scanner so
 # it doesn't fail the build when it finds them in the output. The service role key stays scanned and must never appear.
   SECRETS_SCAN_OMIT_KEYS = "NEXT_PUBLIC_SUPABASE_URL,NEXT_PUBLIC_SUPABASE_ANON_KEY"
+
+# Only a push to main (the production branch) builds and deploys. Other branches, such as dev, and pull requests are skipped,
+# so they use no build credits. Also check Netlify: Site configuration > Build & deploy > Branches, Production branch = main.
+[context.branch-deploy]
+  ignore = "exit 0"
+
+[context.deploy-preview]
+  ignore = "exit 0"

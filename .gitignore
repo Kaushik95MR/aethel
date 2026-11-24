@@ -12,3 +12,7 @@ node_modules
 
 .netlify
 apps/web/apps/
+.claude/skills/
+
+# A separate project with its own git history
+mango-ville/

@@ -1,0 +1,31 @@
+feature,area,priority,original,clone,notes
+Search box on the home hero,home,must,yes,yes,
+Popular-search chips under the search box,home,should,yes,yes,Try chips (filters)
+Place circles that open a search or enquiry,home,should,yes,yes,Explore by place: opens a search and an empty result offers a custom plan
+Category tiles (kind of trip),home,must,yes,yes,Four tiles live
+Trip cards with duration price highlights and next date,cards,must,yes,yes,
+Request a callback on a trip card,leads,must,yes,yes,Lands in Enquiries as source callback
+Search results page with text search,search,must,yes,yes,On /packages
+Filter by kind of trip,search,must,yes,yes,/packages?type= exists; move into /search
+Filter by trip length,search,should,yes,yes,
+Sort by price or soonest date,search,should,yes,yes,
+Empty state that offers to plan a custom trip,search,must,no,yes,
+Traveller reviews with photos,social proof,could,yes,skip,We have no reviews yet. Not invented.
+Customer count and star rating badge,social proof,could,yes,skip,No verified numbers to show
+Live traveller counter and offer countdown,urgency,could,yes,skip,Not shown: invented urgency
+Strike-through prices and discount badges,pricing,could,yes,skip,No real list price to compare
+Looping video experience tiles,media,could,yes,skip,Their footage; we have none
+Partner and tourism board logo strip,trust,could,yes,skip,Not ours
+Trip page photo gallery,trip page,must,yes,yes,Itinerary photos first then bundled or scenic fallback
+Sticky price and dates card with callback,trip page,must,yes,yes,Mobile gets a bottom bar
+Itinerary as day accordion,trip page,must,yes,yes,From the admin itinerary; falls back to package days
+Included and not included lists,trip page,must,yes,yes,
+How booking works,trip page,should,yes,yes,
+Immersive story kept as an option,trip page,should,no,yes,Moved to /packages/slug/story
+Search engine trip data (schema.org),trip page,should,yes,yes,
+Promo strip above the header,home,should,yes,yes,Shows the real next departure
+Top navigation by kind of trip with mobile menu,home,must,yes,yes,
+Hero with photo mosaic and large search,home,must,yes,yes,
+Tabs over a scrolling row of trip cards,home,should,yes,yes,
+Pick a mood tabs with place cards,home,could,yes,yes,
+Footer with kinds and places,home,should,yes,yes,
