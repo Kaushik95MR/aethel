@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import { mfaRequired } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
 const schema = z.object({
@@ -21,7 +22,7 @@ export async function signIn(formData: FormData) {
   // Same message for unknown user and wrong password.
   if (error) redirect("/login?error=invalid");
 
-  redirect("/mfa");
+  redirect(mfaRequired() ? "/mfa" : "/");
 }
 
 export async function signOut() {

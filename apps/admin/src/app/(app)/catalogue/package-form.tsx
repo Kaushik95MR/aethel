@@ -15,8 +15,12 @@ export type PackageValues = {
   inclusions: string[];
   exclusions: string[];
   highlights: string[];
+  party?: string | null;
   is_domestic: boolean;
   status: string;
+  host_id?: string | null;
+  review_state?: string;
+  review_note?: string | null;
 };
 
 function Label({ text, hint, children }: { text: string; hint?: string; children: React.ReactNode }) {
@@ -29,7 +33,7 @@ function Label({ text, hint, children }: { text: string; hint?: string; children
   );
 }
 
-export function PackageForm({ pkg }: { pkg?: PackageValues }) {
+export function PackageForm({ pkg, isHost = false }: { pkg?: PackageValues; isHost?: boolean }) {
   const rupees = pkg?.base_price_paise != null ? String(Number(pkg.base_price_paise) / 100) : "";
   return (
     <form action={savePackage} className="space-y-6">
@@ -39,6 +43,9 @@ export function PackageForm({ pkg }: { pkg?: PackageValues }) {
         <div className="space-y-4">
           <Label text="Title">
             <input name="title" required minLength={2} maxLength={120} defaultValue={pkg?.title} className={field} />
+          </Label>
+          <Label text="The party" hint="The party on this trip in a few words. It shows on the trip card. For example: Beach party under string lights.">
+            <input name="party" maxLength={120} defaultValue={pkg?.party ?? ""} className={field} />
           </Label>
           <Label text="Short summary" hint="One or two sentences shown on the package card.">
             <textarea name="summary" rows={2} maxLength={300} defaultValue={pkg?.summary ?? ""} className={field} />
@@ -64,27 +71,35 @@ export function PackageForm({ pkg }: { pkg?: PackageValues }) {
         </div>
       </Panel>
 
-      <Panel title="Length, price and visibility">
-        <div className="grid gap-4 sm:grid-cols-3">
+      <Panel title={isHost ? "Length of the trip" : "Length, price and visibility"}>
+        <div className={`grid gap-4 ${isHost ? "sm:grid-cols-1" : "sm:grid-cols-3"}`}>
           <Label text="Days">
-            <input name="duration_days" type="number" min={1} max={60} required defaultValue={pkg?.duration_days ?? 3} className={field} />
+            <input name="duration_days" type="number" min={1} max={60} required defaultValue={pkg?.duration_days ?? 3} className={`${field} ${isHost ? "max-w-40" : ""}`} />
           </Label>
-          <Label text="Price per person (₹)">
-            <input name="price" inputMode="decimal" defaultValue={rupees} className={field} />
-          </Label>
-          <Label text="Status" hint="Draft stays hidden. Published shows on the website.">
-            <select name="status" defaultValue={pkg?.status ?? "draft"} className={field}>
-              <option value="draft">Draft</option>
-              <option value="published">Published</option>
-              <option value="archived">Archived</option>
-            </select>
-          </Label>
+          {!isHost && (
+            <>
+              <Label text="Price per person (₹)">
+                <input name="price" inputMode="decimal" defaultValue={rupees} className={field} />
+              </Label>
+              <Label text="Status" hint="Draft stays hidden. Published shows on the website.">
+                <select name="status" defaultValue={pkg?.status ?? "draft"} className={field}>
+                  <option value="draft">Draft</option>
+                  <option value="published">Published</option>
+                  <option value="archived">Archived</option>
+                </select>
+              </Label>
+            </>
+          )}
         </div>
-        <div className="mt-4">
-          <Label text="Price note" hint="For example: from Bengaluru, per person on twin sharing.">
-            <input name="price_note" maxLength={200} defaultValue={pkg?.price_note ?? ""} className={field} />
-          </Label>
-        </div>
+        {isHost ? (
+          <p className="mt-3 text-sm text-zinc-500">You don&apos;t set the price. An admin reviews your trip, sets the price and publishes it.</p>
+        ) : (
+          <div className="mt-4">
+            <Label text="Price note" hint="For example: from Bengaluru, per person on twin sharing.">
+              <input name="price_note" maxLength={200} defaultValue={pkg?.price_note ?? ""} className={field} />
+            </Label>
+          </div>
+        )}
       </Panel>
 
       <Panel title="What's included">
@@ -101,6 +116,7 @@ export function PackageForm({ pkg }: { pkg?: PackageValues }) {
         </div>
       </Panel>
 
+      {!isHost && (
       <details className="rounded-xl border border-zinc-200 bg-white">
         <summary className="flex items-center justify-between px-5 py-4 text-base font-semibold text-zinc-900">
           Web address and more
@@ -116,10 +132,11 @@ export function PackageForm({ pkg }: { pkg?: PackageValues }) {
           </label>
         </div>
       </details>
+      )}
 
       <div className="flex items-center gap-3">
         <button type="submit" className={btnPrimary}>
-          {pkg?.id ? "Save changes" : "Create package"}
+          {pkg?.id ? "Save changes" : isHost ? "Create trip" : "Create package"}
         </button>
         {!pkg?.id && <p className="text-sm text-zinc-500">A starter itinerary is created for you.</p>}
       </div>

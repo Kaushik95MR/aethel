@@ -7,6 +7,12 @@ const TONES: Record<string, string> = {
   quoted: "bg-amber-50 text-amber-800",
   won: "bg-green-50 text-green-700",
   lost: "bg-red-50 text-red-700",
+  // trips under review
+  draft: "bg-zinc-100 text-zinc-700",
+  submitted: "bg-blue-50 text-blue-700",
+  changes_requested: "bg-amber-50 text-amber-800",
+  approved: "bg-green-50 text-green-700",
+  published: "bg-green-50 text-green-700",
   // bookings
   pending: "bg-amber-50 text-amber-800",
   confirmed: "bg-green-50 text-green-700",

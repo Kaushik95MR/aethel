@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { requireStaff } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { formatDate, formatPaise } from "@/lib/format";
@@ -29,6 +30,8 @@ const dayOf = (d: string) => day.format(new Date(`${d}T00:00:00+05:30`));
 
 export default async function OverviewPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
   const staff = await requireStaff();
+  // A host works on their own trips, so that is where they start.
+  if (staff.role === "host") redirect("/catalogue");
   const { error } = await searchParams;
   const supabase = await createClient();
 

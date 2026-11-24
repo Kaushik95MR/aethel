@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { Brand } from "@/components/brand";
 import { Nav, type NavLink } from "@/components/nav";
 import { Avatar } from "@/components/ui";
-import { requireStaff, type StaffRole } from "@/lib/auth";
+import { myHostId, requireStaff, roleLabel, type StaffRole } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { signOut } from "../login/actions";
 
@@ -15,7 +15,12 @@ const ITEMS: Item[] = [
   { label: "Enquiries", href: "/enquiries", icon: "enquiries", roles: ["owner", "manager", "agent"] },
   { label: "Bookings", href: "/bookings", icon: "bookings", roles: ["owner", "manager", "agent", "accounts"] },
   { label: "Catalogue", href: "/catalogue", icon: "catalogue", roles: ["owner", "manager", "content_editor"] },
+  { label: "Review", href: "/review", icon: "review", roles: ["owner", "manager"] },
+  { label: "Hosts", href: "/hosts", icon: "hosts", roles: ["owner", "manager", "content_editor"] },
 ];
+
+// These screens depend on who is signed in, so they cannot be prepared ahead of time. This turns off the dev-only warning about it.
+export const instant = false;
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   // Auth reads cookies (request-time data), so the whole shell streams behind a boundary.
@@ -29,24 +34,39 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 async function Shell({ children }: { children: React.ReactNode }) {
   const staff = await requireStaff();
 
-  // A count appears only on the queue that needs action: enquiries nobody has picked up yet.
-  let newEnquiries: number | null = null;
-  if (["owner", "manager", "agent"].includes(staff.role)) {
-    const supabase = await createClient();
-    const { count } = await supabase.from("enquiries").select("id", { count: "exact", head: true }).eq("status", "new");
-    newEnquiries = count;
-  }
-  const links: NavLink[] = ITEMS.filter((i) => i.roles.includes(staff.role)).map(({ roles: _r, ...l }) => {
-    void _r;
-    return l.href === "/enquiries" ? { ...l, badge: newEnquiries } : l;
-  });
+  // The counts in the menu are asked for together, in one wait, and the host's profile is looked up only for hosts.
+  const supabase = await createClient();
+  const isAdmin = ["owner", "manager"].includes(staff.role);
+  const [enquiries, review, hostId] = await Promise.all([
+    ["owner", "manager", "agent"].includes(staff.role)
+      ? supabase.from("enquiries").select("id", { count: "exact", head: true }).eq("status", "new")
+      : Promise.resolve({ count: null }),
+    isAdmin ? supabase.from("packages").select("id", { count: "exact", head: true }).eq("review_state", "submitted") : Promise.resolve({ count: null }),
+    staff.role === "host" ? myHostId(staff.userId) : Promise.resolve(null),
+  ]);
+  const newEnquiries: number | null = enquiries.count;
+  const waiting: number | null = review.count;
+  const myHost: string | null = hostId;
+
+  const links: NavLink[] =
+    staff.role === "host"
+      ? [
+          { label: "My trips", href: "/catalogue", icon: "catalogue" },
+          ...(myHost ? [{ label: "My profile", href: `/hosts/${myHost}`, icon: "hosts" as const }] : []),
+        ]
+      : ITEMS.filter((i) => i.roles.includes(staff.role)).map(({ roles: _r, ...l }) => {
+          void _r;
+          if (l.href === "/enquiries") return { ...l, badge: newEnquiries };
+          if (l.href === "/review") return { ...l, badge: waiting };
+          return l;
+        });
 
   const account = (
     <div className="flex items-center gap-2.5">
       <Avatar name={staff.fullName} />
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-medium text-zinc-900">{staff.fullName}</p>
-        <p className="text-xs capitalize text-zinc-500">{staff.role.replace("_", " ")}</p>
+        <p className="text-xs text-zinc-500">{roleLabel(staff.role)}</p>
       </div>
       <form action={signOut}>
         <button type="submit" className="text-xs font-medium text-zinc-600 underline-offset-2 hover:text-zinc-900 hover:underline">
@@ -60,8 +80,8 @@ async function Shell({ children }: { children: React.ReactNode }) {
     <div className="min-h-screen lg:grid lg:grid-cols-[232px_1fr]">
       {/* Desktop sidebar */}
       <aside className="sticky top-0 hidden h-screen flex-col gap-6 border-r border-zinc-200 px-3 py-4 lg:flex">
-        <Link href="/" className="px-2.5" aria-label="Aethel overview">
-          <Brand />
+        <Link href="/" className="px-2.5" aria-label="Aethel trip overview">
+          <Brand className="h-12" />
         </Link>
         <Nav links={links} />
         <div className="mt-auto border-t border-zinc-200 px-1 pt-4">{account}</div>

@@ -1,35 +1,33 @@
 import type { Metadata } from "next";
-import { Bricolage_Grotesque, Geist, Geist_Mono } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+// The same two faces as the public site: Onest for everything, Unbounded for page titles.
+const onest = localFont({
+  src: [
+    { path: "./fonts/Onest-normal-400.woff2", weight: "400" },
+    { path: "./fonts/Onest-normal-500.woff2", weight: "500" },
+  ],
+  variable: "--font-onest",
+  display: "swap",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-// The same face as the public site, kept to page titles and the wordmark.
-const bricolage = Bricolage_Grotesque({
-  variable: "--font-bricolage",
-  subsets: ["latin"],
+const unbounded = localFont({
+  src: "./fonts/Unbounded-normal-800.woff2",
+  weight: "800",
+  variable: "--font-unbounded",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "Aethel admin",
-  description: "Staff tools for Aethel treks: enquiries, bookings and the catalogue",
+  title: "Aethel trip admin",
+  description: "Staff tools for Aethel trip: enquiries, bookings, trips and hosts",
   robots: { index: false, follow: false },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} ${bricolage.variable} h-full antialiased`}
-    >
+    <html lang="en" className={`${onest.variable} ${unbounded.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
   );

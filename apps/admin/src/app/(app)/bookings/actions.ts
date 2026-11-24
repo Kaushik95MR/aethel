@@ -1,7 +1,7 @@
 "use server";
 
 import { randomBytes } from "node:crypto";
-import { revalidatePath } from "next/cache";
+import { revalidatePath } from "@/lib/revalidate";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { requireStaff } from "@/lib/auth";
@@ -112,7 +112,9 @@ export async function updateBookingStatus(formData: FormData) {
   });
   if (!parsed.success) redirect("/bookings");
   const { id, status, cancel_reason } = parsed.data;
-  const back = `/bookings/${id}`;
+  // The "Who is going" screen asks to come back to itself afterwards. Only that exact kind of address is allowed.
+  const returnTo = String(formData.get("return_to") ?? "");
+  const back = /^\/catalogue\/[0-9a-f-]{36}\/dates\/[0-9a-f-]{36}$/.test(returnTo) ? returnTo : `/bookings/${id}`;
   if (status === "cancelled" && !cancel_reason) redirect(`${back}?error=reason_required`);
 
   const supabase = await createClient();

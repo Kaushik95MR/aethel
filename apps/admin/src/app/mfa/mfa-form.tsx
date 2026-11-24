@@ -55,20 +55,27 @@ export function MfaForm() {
     setBusy(true);
     setError(null);
     const supabase = createClient();
-    const { data: challenge, error: challengeError } = await supabase.auth.mfa.challenge({ factorId: mode.factorId });
-    if (challengeError || !challenge) {
+    // The sign-in service sometimes does not answer. Never leave the button stuck: give up after 15 seconds and say so.
+    const withTimeout = <T,>(p: PromiseLike<T>) =>
+      Promise.race([p, new Promise<never>((_, reject) => setTimeout(() => reject(new Error("timeout")), 15000))]);
+    try {
+      const { data: challenge, error: challengeError } = await withTimeout(supabase.auth.mfa.challenge({ factorId: mode.factorId }));
+      if (challengeError || !challenge) {
+        setBusy(false);
+        return setError(challengeError?.message ? `Couldn't check that code: ${challengeError.message}` : "Couldn't check that code. Try again.");
+      }
+      const { error: verifyError } = await withTimeout(
+        supabase.auth.mfa.verify({ factorId: mode.factorId, challengeId: challenge.id, code }),
+      );
+      if (verifyError) {
+        setBusy(false);
+        setCode("");
+        const tooMany = /rate|too many|limit/i.test(verifyError.message);
+        return setError(tooMany ? "Too many tries. Wait a minute, then enter the newest code." : "That code didn't match. Try the newest one.");
+      }
+    } catch {
       setBusy(false);
-      return setError("Couldn't check that code. Try again.");
-    }
-    const { error: verifyError } = await supabase.auth.mfa.verify({
-      factorId: mode.factorId,
-      challengeId: challenge.id,
-      code,
-    });
-    if (verifyError) {
-      setBusy(false);
-      setCode("");
-      return setError("That code didn't match. Try the newest one.");
+      return setError("The sign-in service didn't answer. Refresh the page and try again.");
     }
     router.replace("/");
     router.refresh();

@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath } from "@/lib/revalidate";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { requireStaff } from "@/lib/auth";
@@ -9,7 +9,7 @@ import { syncItineraryDays } from "@/lib/itinerary";
 import { fillItineraryPhotos, fillPackagePhotos } from "@/lib/auto-photos";
 import { SOUND_SCENES, STEP_KINDS, stepLabel } from "./itinerary-options";
 
-const ROLES = ["owner", "manager", "content_editor"] as const;
+const ROLES = ["owner", "manager", "content_editor", "host"] as const;
 const uuid = z.string().uuid();
 type Client = Awaited<ReturnType<typeof createClient>>;
 
@@ -126,7 +126,9 @@ export async function addStep(formData: FormData) {
   await requireStaff([...ROLES]);
   const { package_id, itinerary_id } = parseIds(formData);
   const day = uuid.safeParse(formData.get("day_id"));
-  const kind = z.enum(STEP_KINDS.map((k) => k.value) as [string, ...string[]]).safeParse(formData.get("kind"));
+  // A step with your own name ("Bonfire night", "Kayaking") is an activity that carries that name.
+  const custom = String(formData.get("custom_title") ?? "").trim().slice(0, 120);
+  const kind = z.enum(STEP_KINDS.map((k) => k.value) as [string, ...string[]]).safeParse(custom ? "activity" : formData.get("kind"));
   if (!day.success || !kind.success) redirect(`${base(package_id, itinerary_id)}?error=invalid`);
 
   const supabase = await createClient();
@@ -139,7 +141,7 @@ export async function addStep(formData: FormData) {
     .maybeSingle();
   const { data: step, error } = await supabase
     .from("itinerary_steps")
-    .insert({ day_id: day.data, kind: kind.data, title: stepLabel(kind.data), sort_order: (last?.sort_order ?? -1) + 1 })
+    .insert({ day_id: day.data, kind: kind.data, title: custom || stepLabel(kind.data), sort_order: (last?.sort_order ?? -1) + 1 })
     .select("id")
     .maybeSingle();
   if (error || !step) redirect(`${base(package_id, itinerary_id)}?error=failed#day-${day.data}`);
@@ -331,6 +333,7 @@ export async function attachMedia(input: { stepId: string; path: string; kind: "
   const { error: linkError } = await supabase
     .from("itinerary_step_media")
     .insert({ step_id: p.data.stepId, media_id: media.id, sort_order: count ?? 0 });
+  if (!linkError) revalidatePath("/catalogue");
   return { ok: !linkError as boolean };
 }
 

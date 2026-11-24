@@ -32,7 +32,7 @@ export function PageHeader({
       )}
       <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
         <div className="min-w-0">
-          <h1 className="font-display text-2xl font-semibold tracking-tight text-zinc-900">{title}</h1>
+          <h1 className="font-display text-xl font-semibold tracking-tight text-zinc-900">{title}</h1>
           {description && <p className="mt-1 max-w-2xl text-sm text-zinc-500">{description}</p>}
         </div>
         {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
@@ -97,8 +97,8 @@ export function Avatar({ name }: { name: string }) {
   return (
     <span
       aria-hidden
-      className="grid size-8 shrink-0 place-items-center rounded-full text-xs font-semibold text-zinc-800"
-      style={{ background: `hsl(${hue} 45% 90%)` }}
+      className="grid size-8 shrink-0 place-items-center rounded-full text-xs font-semibold text-zinc-900"
+      style={{ background: `hsl(${hue} 35% 28%)` }}
     >
       {initials || "?"}
     </span>

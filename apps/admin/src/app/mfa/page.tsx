@@ -1,7 +1,12 @@
 import { Suspense } from "react";
+import { connection } from "next/server";
 import { redirect } from "next/navigation";
+import { mfaRequired } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { MfaForm } from "./mfa-form";
+
+// These screens depend on who is signed in, so they cannot be prepared ahead of time. This turns off the dev-only warning about it.
+export const instant = false;
 
 export default function MfaPage() {
   return (
@@ -12,6 +17,8 @@ export default function MfaPage() {
 }
 
 async function MfaGate() {
+  await connection();
+  if (!mfaRequired()) redirect("/");
   const supabase = await createClient();
   const {
     data: { user },

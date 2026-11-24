@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { z } from "zod";
-import { requireStaff } from "@/lib/auth";
+import { myHostId, requireStaff } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { formatDate } from "@/lib/format";
 import { btn, btnDanger, btnPrimary, Empty, Flash, PageHeader } from "@/components/ui";
@@ -58,7 +58,7 @@ export default async function ItineraryPage({
   params: Promise<{ id: string; itineraryId: string }>;
   searchParams: Promise<{ saved?: string; error?: string; photos?: string }>;
 }) {
-  await requireStaff(["owner", "manager", "content_editor"]);
+  const staff = await requireStaff(["owner", "manager", "content_editor", "host"]);
   const { id, itineraryId } = await params;
   if (!z.string().uuid().safeParse(id).success || !z.string().uuid().safeParse(itineraryId).success) notFound();
   const sp = await searchParams;
@@ -76,9 +76,10 @@ export default async function ItineraryPage({
       .order("day_no"),
     supabase.from("catalogue_options").select("id, kind, label, maps_url").order("label"),
     supabase.from("departures").select("start_date").eq("itinerary_id", itineraryId).order("start_date"),
-    supabase.from("packages").select("title, duration_days").eq("id", id).maybeSingle(),
+    supabase.from("packages").select("title, duration_days, review_state, host_id").eq("id", id).maybeSingle(),
   ]);
   if (!itnRes.data || !pkgRes.data) notFound();
+  if (staff.role === "host" && pkgRes.data.host_id !== (await myHostId(staff.userId))) notFound();
   const itn = itnRes.data;
   const days = ((daysRes.data ?? []) as unknown as Day[]).map((d) => ({
     ...d,
@@ -90,6 +91,8 @@ export default async function ItineraryPage({
   const baseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const used = (depsRes.data ?? []).map((d) => formatDate(d.start_date));
   const stepCount = days.reduce((n, d) => n + d.itinerary_steps.length, 0);
+  // A host edits only while the trip is a draft or has been sent back.
+  const locked = staff.role === "host" && !["draft", "changes_requested"].includes(pkgRes.data.review_state ?? "approved");
 
   const hidden = (
     <>
@@ -118,6 +121,12 @@ export default async function ItineraryPage({
           </form>
         }
       />
+      {locked && (
+        <p role="status" className="rounded-lg border border-zinc-200 bg-zinc-100 px-3 py-2 text-sm text-zinc-800">
+          This trip is with an admin for review, so the itinerary can&apos;t be changed right now.
+        </p>
+      )}
+      <fieldset disabled={locked} className="min-w-0 space-y-6 border-0 p-0">
 
       {sp.photos !== undefined && (
         <Flash tone="info">
@@ -444,6 +453,13 @@ export default async function ItineraryPage({
                 ))}
               </select>
             </label>
+            <input
+              name="custom_title"
+              maxLength={120}
+              placeholder="Or name your own step, e.g. Bonfire night"
+              aria-label="Name for a custom step"
+              className={`${input} min-w-64 flex-1`}
+            />
             <button type="submit" className={btn}>
               Add step
             </button>
@@ -480,6 +496,7 @@ export default async function ItineraryPage({
           </form>
         </div>
       </details>
+      </fieldset>
     </>
   );
 }
